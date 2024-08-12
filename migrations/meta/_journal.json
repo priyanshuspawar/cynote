@@ -1,0 +1,13 @@
+{
+  "version": "5",
+  "dialect": "pg",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1723457279398,
+      "tag": "0000_mean_silver_fox",
+      "breakpoints": true
+    }
+  ]
+}
