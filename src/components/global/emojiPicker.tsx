@@ -1,8 +1,8 @@
 "use client"
 import dynamic from 'next/dynamic';
-import { useRouter } from 'next/navigation';
-import React from 'react'
+import React, { useState } from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { EmojiClickData } from 'emoji-picker-react';
 
 type EmojiPickerProps = {
     children: React.ReactNode;
@@ -10,17 +10,21 @@ type EmojiPickerProps = {
 }
 
 const EmojiPicker = ({getValue,children}: EmojiPickerProps) => {
-  const route = useRouter()
   const Picker = dynamic(()=>import('emoji-picker-react'))
-  const onClick = (selectedEmoji:any)=>{
+  const onClick = (selectedEmoji:EmojiClickData)=>{
     if(getValue) getValue(selectedEmoji.emoji)
   }
+  const [isPopoverOpen,setIspopoverOpen] = useState(false)
+  
   return (
     <div className='flex items-center'>
-        <Popover>
+        <Popover open={isPopoverOpen} onOpenChange={setIspopoverOpen}>
             <PopoverTrigger className='cursor-pointer'>{children}</PopoverTrigger>
-            <PopoverContent className='p-0 border-none'>
-                <Picker onEmojiClick={onClick}/>
+            <PopoverContent className='flex bg-inherit flex-col p-0 border-none'>
+                <Picker width={300} height={350} onEmojiClick={(e)=>{
+                  onClick(e)
+                  setIspopoverOpen(false)
+                  }}/>
             </PopoverContent>
         </Popover>
     </div>

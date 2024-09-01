@@ -31,7 +31,7 @@ const DropDown = ({
   disabled,
   customIcon,
 }: DropDownProps) => {
-  console.log('id@',id)
+  // console.log('id@',id)
   const supabase = createClientComponentClient();
   const { toast } = useToast();
   const {user} = useSupabaseUser()
