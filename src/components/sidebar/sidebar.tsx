@@ -47,6 +47,8 @@ const SideBar = async ({ params, className }: SideBarProps) => {
       getCollaboratingWorkspaces(user.id),
       getSharedWorkspaces(user.id),
     ]);
+
+   
   return (
     <aside
       className={twMerge(
