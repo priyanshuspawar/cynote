@@ -1,54 +1,57 @@
-import {
-  getCollaboratingWorkspaces,
-  getFolders,
-  getPrivateWorkspaces,
-  getSharedWorkspaces,
-  getUserSubscriptionStatus,
-} from "@/lib/supabase/queries";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import React from "react";
+"use client";
+import React, { useCallback, useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 import WorkspaceDropdown from "./workspaceDropdown";
 import PlanUsage from "./plan-usage";
 import NativeNavigation from "./native-navigation";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "./folders-dropdown-list";
+import {
+  useGetCollaboratingWorkspacesQuery,
+  useGetPrivateWorkspacesQuery,
+  useGetSharedWorkspacesQuery,
+} from "@/redux/services/workspaceApi";
+import { Spinner } from "@/components/editor/ui/Spinner";
+import { setSelectedWorkspaceId } from "@/redux/features/selectedSlice";
+import { useAppDispatch } from "@/redux/hooks";
 
 type SideBarProps = {
   params: { workspaceId: string };
   className?: string;
 };
 
-const SideBar = async ({ params, className }: SideBarProps) => {
-  const supabase = createServerComponentClient({ cookies });
-  // user
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-  // subscription
-  const { data: subscriptionData, error: subscriptionError } =
-    await getUserSubscriptionStatus(user.id);
+const SideBar = ({ params, className }: SideBarProps) => {
+  const dispatch = useAppDispatch();
+  const selectedWorkspaceSetter = useCallback(() => {
+    dispatch(setSelectedWorkspaceId(params.workspaceId));
+  }, [params]);
+
+  useEffect(() => {
+    selectedWorkspaceSetter();
+  }, []);
   // folders
-  const { data: workspaceFolderData, error: FoldersError } = await getFolders(
-    params.workspaceId
-  );
+
   // error
-  if (subscriptionError || FoldersError) {
-    redirect("/dashboard");
+  // TODO: handle subscription logic
+
+  const { data: privateWorkspaces, isLoading: privateWorkspacesLoading } =
+    useGetPrivateWorkspacesQuery(null);
+  const {
+    data: collaboratingWorkspaces,
+    isLoading: collaboratingWorkspacesLoading,
+  } = useGetCollaboratingWorkspacesQuery(null);
+  const { data: sharedWorkspaces, isLoading: sharedWorkspacesLoading } =
+    useGetSharedWorkspacesQuery(null);
+  if (
+    privateWorkspacesLoading ||
+    collaboratingWorkspacesLoading ||
+    sharedWorkspacesLoading
+  ) {
+    return <></>;
   }
-
-
-  const [privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces] =
-    await Promise.all([
-      getPrivateWorkspaces(user.id),
-      getCollaboratingWorkspaces(user.id),
-      getSharedWorkspaces(user.id),
-    ]);
-
-   
+  if (!privateWorkspaces || !sharedWorkspaces || !collaboratingWorkspaces) {
+    return <div>Error fetching data</div>;
+  }
   return (
     <aside
       className={twMerge(
@@ -58,20 +61,20 @@ const SideBar = async ({ params, className }: SideBarProps) => {
     >
       <div>
         <WorkspaceDropdown
-          privateWorkspaces={privateWorkspaces}
-          sharedWorkspaces={sharedWorkspaces}
-          colaboratingWorkspaces={collaboratingWorkspaces}
+          privateWorkspaces={privateWorkspaces || []}
+          sharedWorkspaces={collaboratingWorkspaces || []}
+          colaboratingWorkspaces={sharedWorkspaces || []}
           defaultValue={[
             ...privateWorkspaces,
             ...collaboratingWorkspaces,
             ...sharedWorkspaces,
-          ].find((workspace) => workspace.id === params.workspaceId)}
+          ].find((workspace) => workspace.id == params.workspaceId)}
         />
-        <PlanUsage
+        {/* <PlanUsage
           foldersLength={workspaceFolderData?.length || 0}
           subscription={subscriptionData}
-        />
-        <NativeNavigation myWorkspaceId={params.workspaceId}/>
+        /> */}
+        <NativeNavigation myWorkspaceId={params.workspaceId} />
         <ScrollArea
           className="overflow-y-scroll relative
           h-[450px]
@@ -88,10 +91,7 @@ const SideBar = async ({ params, className }: SideBarProps) => {
           to-transparent 
           z-40"
           />
-          <FoldersDropdownList
-            workspaceFolders={workspaceFolderData || []}
-            workspaceId={params.workspaceId}
-          />
+          <FoldersDropdownList workspaceId={params.workspaceId} />
         </ScrollArea>
       </div>
     </aside>

@@ -5,7 +5,14 @@ import React, { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Form, FormDescription, FormField,FormMessage,FormItem,FormControl } from "@/components/ui/form";
+import {
+  Form,
+  FormDescription,
+  FormField,
+  FormMessage,
+  FormItem,
+  FormControl,
+} from "@/components/ui/form";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "../../../../public/cypresslogo.svg";
@@ -33,8 +40,9 @@ const LoginPage = () => {
     if (error) {
       form.reset();
       setSubmitError(error.message);
+      return;
     }
-    router.replace('/dashboard');
+    router.replace("/dashboard");
   };
 
   return (
@@ -70,7 +78,6 @@ const LoginPage = () => {
           An all-In-One Collaboration and Productivity Platform
         </FormDescription>
 
-
         {/* FORM*/}
         <FormField
           disabled={isLoading}
@@ -79,11 +86,7 @@ const LoginPage = () => {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  {...field}
-                />
+                <Input type="email" placeholder="Email" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -96,11 +99,7 @@ const LoginPage = () => {
           render={({ field }) => (
             <FormItem>
               <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  {...field}
-                />
+                <Input type="password" placeholder="Password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -113,14 +112,11 @@ const LoginPage = () => {
           size="lg"
           disabled={isLoading}
         >
-          {!isLoading ? 'Login' : <Loader />}
+          {!isLoading ? "Login" : <Loader />}
         </Button>
         <span className="self-container">
-          Dont have an account?{' '}
-          <Link
-            href="/signup"
-            className="text-primary"
-          >
+          Dont have an account?{" "}
+          <Link href="/signup" className="text-primary">
             Sign Up
           </Link>
         </span>
