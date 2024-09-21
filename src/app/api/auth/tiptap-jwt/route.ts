@@ -7,6 +7,8 @@ if(!process.env.TIPTAP_COLLAB_SECRET){
 
 export async function POST(req:NextRequest){
     // const {fileId} = req.json()
-    const token = jwt.sign({},process.env.TIPTAP_COLLAB_SECRET!)
+    const token = jwt.sign({
+        username:"priyanshu"
+    },process.env.TIPTAP_COLLAB_SECRET!)
     return new NextResponse(JSON.stringify({token}))
 }

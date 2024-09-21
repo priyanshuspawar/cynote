@@ -1,33 +1,36 @@
-import DashboardSetup from '@/components/dashboard/DashboardSetup'
-import db from '@/lib/supabase/db'
-import { getUserSubscriptionStatus } from '@/lib/supabase/queries'
-import { createServerComponentClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
-import React from 'react'
+import DashboardSetup from "@/components/dashboard/DashboardSetup";
+import db from "@/lib/supabase/db";
+import { createClient } from "@/lib/supabase/helpers/server";
+import { redirect } from "next/navigation";
+import React from "react";
 
-const DashboardPage = async() => {
-    const supabase = createServerComponentClient({cookies})
-    const {data:{user}} = await supabase.auth.getUser();
-    if(!user)return;
-    const workspace = await db.query.workspaces.findFirst({
-        where:(table,{eq})=>eq(table.workspaceOwner,user.id)
-    })
+const DashboardPage = async () => {
+  const supabase = createClient();
+  const { data } = await supabase.auth.getUser();
+  const { user } = data;
+  if (!user) return;
+  const workspace = await db.query.workspaces.findFirst({
+    where: (table, { eq }) => eq(table.workspaceOwner, user.id),
+  });
 
-    const {data:subscription,error:subscriptionError} = await getUserSubscriptionStatus(user.id)
-    if(subscriptionError) return;
-    if(!workspace){
-        return (
-            <div
-            className='bg-background h-screen w-screen flex justify-center items-center'
-            >
-                <DashboardSetup user={user} subscription={subscription}/>
-            </div>
-          )
-    }
-    redirect(`/dashboard/${workspace.id}`);
-  
-}
+  // TODO: check web progies git  subscription logic
+  if (!workspace) {
+    return (
+      <div className="bg-background h-screen w-screen flex justify-center items-center">
+        <DashboardSetup user={user} subscription={null} />
+      </div>
+    );
+  }
+  redirect(`/dashboard/${workspace.id}`);
+};
 
-export default DashboardPage
+// const DashboardPage = () => {
+//   return (
+//     <div>
+//       page
+//       {/* <DashboardSetup user={user} subscription={subscription}/> */}
+//     </div>
+//   );
+// };
 
+export default DashboardPage;
