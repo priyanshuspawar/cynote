@@ -64,7 +64,8 @@ const WorkspaceDropdown = ({
         bg-black/10
         backdrop-blur-lg
         group
-        overflow-scroll
+        overflow-x-hidden
+        overflow-y-auto
         border-[1px]
         border-muted
     "

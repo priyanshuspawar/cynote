@@ -1,6 +1,6 @@
 "use client";
 import { useRouter } from "next/navigation";
-import React, { useMemo, useState, useCallback } from "react";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
 import {
   AccordionContent,
   AccordionItem,
@@ -223,7 +223,11 @@ const DropDown = ({ id, title, listType, iconId }: Props) => {
       ),
     [isFolder]
   );
-
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalTitle(title);
+    }
+  }, [title, isEditing]);
   return (
     <AccordionItem
       value={id}

@@ -1,6 +1,6 @@
 "use client";
 import { EditorContent } from "@tiptap/react";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 
 import { LinkMenu } from "@/components/editor/components/menus";
 
@@ -19,15 +19,16 @@ import { ContentItemMenu } from "../menus/ContentItemMenu";
 import * as Y from "yjs";
 import { HocuspocusProvider } from "@hocuspocus/provider";
 import { useUser } from "@/lib/providers/colab-user-provider";
+import Header from "../Header";
 
 export const BlockEditor = ({
-  path,
   ydoc,
   provider,
+  room,
 }: {
-  path: string;
   hasCollab: boolean;
   ydoc: Y.Doc;
+  room: string;
   provider?: HocuspocusProvider | null | undefined;
 }) => {
   const menuContainerRef = useRef(null);
@@ -41,12 +42,9 @@ export const BlockEditor = ({
   useEffect(() => {
     dispatch({ type: "UPDATE_USER", payload: users });
   }, []);
-  console.log("re render");
   return (
     <div className="flex flex-col overflow-y-scroll" ref={menuContainerRef}>
-      <div className="w-full bg-black h-24">
-        <p>cgeck</p>
-      </div>
+      <Header id={room} />
       <div className="relative flex flex-col flex-1 h-full">
         <EditorContent editor={editor} className="flex-1 overflow-y-auto" />
         <ContentItemMenu editor={editor} />
@@ -56,27 +54,6 @@ export const BlockEditor = ({
         <TableRowMenu editor={editor} appendTo={menuContainerRef} />
         <TableColumnMenu editor={editor} appendTo={menuContainerRef} />
         <ImageBlockMenu editor={editor} appendTo={menuContainerRef} />
-      </div>
-    </div>
-  );
-};
-
-interface HeaderProps {
-  fileName: string;
-  bannerUrl?: string;
-}
-
-const Header: React.FC<HeaderProps> = ({ fileName, bannerUrl }) => {
-  return (
-    <div className="bg-white shadow-md">
-      {bannerUrl && (
-        <div
-          className="h-32 bg-contain bg-center"
-          style={{ backgroundImage: `url(${bannerUrl})` }}
-        />
-      )}
-      <div className="px-4 py-2">
-        <h1 className="text-2xl font-bold">{fileName}</h1>
       </div>
     </div>
   );

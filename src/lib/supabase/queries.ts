@@ -6,7 +6,6 @@ import { validate } from "uuid";
 import { Folder, Subscription, workspace, File, User } from "./supabase.types";
 import { collaborators } from "./schema";
 import { createClient } from "./helpers/server";
-import { error } from "console";
 
 const getUserServer = async () => {
   const supabaseServer = createClient();

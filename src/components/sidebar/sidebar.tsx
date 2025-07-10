@@ -1,5 +1,5 @@
 "use client";
-import React, { useCallback, useEffect } from "react";
+import React, { useEffect, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import WorkspaceDropdown from "./workspaceDropdown";
 import PlanUsage from "./plan-usage";
@@ -12,7 +12,10 @@ import {
   useGetSharedWorkspacesQuery,
 } from "@/redux/services/workspaceApi";
 import { Spinner } from "@/components/editor/ui/Spinner";
-import { setSelectedWorkspaceId } from "@/redux/features/selectedSlice";
+import {
+  setSelectedWorkspace,
+  setSelectedWorkspaceId,
+} from "@/redux/features/selectedSlice";
 import { useAppDispatch } from "@/redux/hooks";
 
 type SideBarProps = {
@@ -22,18 +25,13 @@ type SideBarProps = {
 
 const SideBar = ({ params, className }: SideBarProps) => {
   const dispatch = useAppDispatch();
-  const selectedWorkspaceSetter = useCallback(() => {
-    dispatch(setSelectedWorkspaceId(params.workspaceId));
-  }, [params]);
 
+  // Set the workspaceId once when the component mounts
   useEffect(() => {
-    selectedWorkspaceSetter();
-  }, []);
-  // folders
+    dispatch(setSelectedWorkspaceId(params.workspaceId));
+  }, [params.workspaceId, dispatch]);
 
-  // error
-  // TODO: handle subscription logic
-
+  // Fetch workspaces
   const { data: privateWorkspaces, isLoading: privateWorkspacesLoading } =
     useGetPrivateWorkspacesQuery(null);
   const {
@@ -42,16 +40,42 @@ const SideBar = ({ params, className }: SideBarProps) => {
   } = useGetCollaboratingWorkspacesQuery(null);
   const { data: sharedWorkspaces, isLoading: sharedWorkspacesLoading } =
     useGetSharedWorkspacesQuery(null);
+
+  // Memoize the combined workspaces to avoid re-calculation
+  const allWorkspaces = useMemo(() => {
+    return [
+      ...(privateWorkspaces || []),
+      ...(collaboratingWorkspaces || []),
+      ...(sharedWorkspaces || []),
+    ];
+  }, [privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces]);
+
+  // Find the selected workspace based on params.workspaceId
+  const selectedWorkspace = useMemo(() => {
+    return allWorkspaces.find(
+      (workspace) => workspace.id === params.workspaceId
+    );
+  }, [allWorkspaces, params.workspaceId]);
+
+  // Dispatch the selectedWorkspace only if it changes
+  useEffect(() => {
+    if (selectedWorkspace) {
+      dispatch(setSelectedWorkspace(selectedWorkspace));
+    }
+  }, [selectedWorkspace, dispatch]);
+
   if (
     privateWorkspacesLoading ||
     collaboratingWorkspacesLoading ||
     sharedWorkspacesLoading
   ) {
-    return <></>;
+    return <Spinner />;
   }
+
   if (!privateWorkspaces || !sharedWorkspaces || !collaboratingWorkspaces) {
     return <div>Error fetching data</div>;
   }
+
   return (
     <aside
       className={twMerge(
@@ -64,33 +88,11 @@ const SideBar = ({ params, className }: SideBarProps) => {
           privateWorkspaces={privateWorkspaces || []}
           sharedWorkspaces={collaboratingWorkspaces || []}
           colaboratingWorkspaces={sharedWorkspaces || []}
-          defaultValue={[
-            ...privateWorkspaces,
-            ...collaboratingWorkspaces,
-            ...sharedWorkspaces,
-          ].find((workspace) => workspace.id == params.workspaceId)}
+          defaultValue={selectedWorkspace}
         />
-        {/* <PlanUsage
-          foldersLength={workspaceFolderData?.length || 0}
-          subscription={subscriptionData}
-        /> */}
         <NativeNavigation myWorkspaceId={params.workspaceId} />
-        <ScrollArea
-          className="overflow-y-scroll relative
-          h-[450px]
-        "
-        >
-          <div
-            className="pointer-events-none 
-          w-full 
-          absolute 
-          bottom-0 
-          h-20 
-          bg-gradient-to-t 
-          from-background 
-          to-transparent 
-          z-40"
-          />
+        <ScrollArea className="overflow-y-hidden relative h-[450px]">
+          <div className="pointer-events-none w-full absolute bottom-0 h-20 bg-gradient-to-t from-background to-transparent z-40" />
           <FoldersDropdownList workspaceId={params.workspaceId} />
         </ScrollArea>
       </div>

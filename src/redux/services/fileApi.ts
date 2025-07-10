@@ -112,7 +112,10 @@ export const fileApi = createApi({
         updatedData: { folderId: string } & Omit<Partial<File>, "id">;
         fileId: string;
       }) => {
-        const { data } = await updateFile(updatedData, fileId);
+        const { data, error } = await updateFile(updatedData, fileId);
+        if (error) {
+          return { error };
+        }
         return { data };
       },
       onQueryStarted: async (
@@ -122,6 +125,7 @@ export const fileApi = createApi({
         if (!updatedData.folderId) {
           return;
         }
+        // const patchSingleFile = dispatch(fileApi.util.)
         const patchResult = dispatch(
           fileApi.util.updateQueryData(
             "getFiles",

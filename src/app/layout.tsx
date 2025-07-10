@@ -31,7 +31,12 @@ export default function RootLayout({
   // console.log(db);
   return (
     <html lang="en">
-      <body className={twMerge(dmSans.className, "bg-background")}>
+      <body
+        className={twMerge(
+          dmSans.className,
+          "bg-background w-screen h-full overflow-x-hidden"
+        )}
+      >
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <ReduxProvider>
             <SupabaseUserProvider>{children}</SupabaseUserProvider>
