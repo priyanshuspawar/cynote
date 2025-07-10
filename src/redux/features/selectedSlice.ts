@@ -1,27 +1,14 @@
+import { workspace, File, Folder } from "@/lib/supabase/supabase.types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 // Define types for Workspace, Folder, and File
-interface Workspace {
-  id: string;
-  // Add other properties as necessary
-}
-
-interface Folder {
-  id: string;
-  // Add other properties as necessary
-}
-
-interface File {
-  id: string;
-  // Add other properties as necessary
-}
 
 // Define the state shape for selected entities
 interface SelectedEntitiesState {
   workspaceId: string | null;
   folderId: string | null;
   fileId: string | null;
-  selectedWorkspace: Workspace | null;
+  selectedWorkspace: workspace | null;
   selectedFolder: Folder | null;
   selectedFile: File | null;
 }
@@ -50,7 +37,7 @@ const selectedEntitiesSlice = createSlice({
     setSelectedFileId: (state, action: PayloadAction<string>) => {
       state.fileId = action.payload;
     },
-    setSelectedWorkspace: (state, action: PayloadAction<Workspace | null>) => {
+    setSelectedWorkspace: (state, action: PayloadAction<workspace | null>) => {
       state.selectedWorkspace = action.payload;
       // Optionally reset folder and file when workspace changes
       state.selectedFolder = null;

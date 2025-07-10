@@ -3,7 +3,6 @@
 import { HocuspocusProvider, TiptapCollabProvider } from "@hocuspocus/provider";
 import "iframe-resizer/js/iframeResizer.contentWindow";
 import { useEffect, useLayoutEffect, useMemo, useState } from "react";
-
 import * as Y from "yjs";
 import { BlockEditor } from "./components/BlockEditor";
 import { usePathname } from "next/navigation";
@@ -71,7 +70,7 @@ export default function CollaborativeEditor({
   if (!provider || collabToken === undefined) return;
   return (
     <>
-      <BlockEditor hasCollab ydoc={ydoc} provider={provider} path={path} />
+      <BlockEditor room={room} hasCollab ydoc={ydoc} provider={provider} />
     </>
   );
 }
