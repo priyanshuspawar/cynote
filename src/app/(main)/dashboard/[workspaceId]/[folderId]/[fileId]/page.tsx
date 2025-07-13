@@ -1,21 +1,16 @@
 "use client";
-import Navigation from "@/components/editor/components/Header/navigation";
 import { Spinner } from "@/components/editor/ui/Spinner";
+import Editor from "@/components/liveblock-editor/editor";
 import {
   setSelectedFileId,
   setSelectedFolderId,
-  setSelectedFile,
 } from "@/redux/features/selectedSlice";
 import { useAppDispatch } from "@/redux/hooks";
 import { useGetFilesDetailsQuery } from "@/redux/services/fileApi";
-import dynamic from "next/dynamic";
 import { redirect, useParams } from "next/navigation";
 import React, { useEffect } from "react";
 
 // Dynamically load the collaborative editor (outside component to avoid hook issues)
-const CollaborativeEditor = dynamic(() => import("@/components/editor/index"), {
-  ssr: false,
-});
 
 const FilePage = () => {
   const { fileId }: { fileId: string } = useParams();
@@ -58,11 +53,10 @@ const FilePage = () => {
   }
 
   return (
-    <>
-      <Navigation />
-      {/* Always render CollaborativeEditor but only pass data when available */}
-      {/* {data && <CollaborativeEditor room={data.id} folderId={data.folderId!} />} */}
-    </>
+    <div className="h-full w-full">
+      <span>File page</span>
+      <Editor />
+    </div>
   );
 };
 

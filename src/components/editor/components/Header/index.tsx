@@ -14,23 +14,16 @@ import { SuggestedImages } from "@/lib/constants";
 import Image from "next/image";
 import { ImageIcon, Inbox, MessageCircle, Smile, XCircle } from "lucide-react";
 import debounce from "lodash/debounce";
-import { File as AppFile } from "@/lib/supabase/supabase.types";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "@/lib/supabase/helpers/client";
 import EmojiPicker from "@/components/global/emojiPicker";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/providers/colab-user-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { usePathname } from "next/navigation";
 
 const Header = ({ id }: { id: string }) => {
   const { data: fileData, error, isError } = useGetFilesDetailsQuery(id);
   const [updateFile, { error: fileUpdateError }] = useUpdateFileMutation();
-
-  if (!fileData || error) {
-    return;
-  }
-  // states
   const supabase = createClient();
   const { toast } = useToast();
   const [position, setPosition] = useState<{ x: number; y: number }>();
@@ -40,6 +33,21 @@ const Header = ({ id }: { id: string }) => {
   const [tempTitle, setTempTitle] = useState(fileData?.title);
   const { state } = useUser();
   const inputRef = useRef<HTMLInputElement>(null);
+  const debouncedUpdateBannerUrl = useMemo(
+    () => debounce(async (url: string) => updateBannerUrlToDb(url), 300),
+    [fileData?.id]
+  );
+  const handleBannerChange = useCallback(
+    (url: string | null) => {
+      debouncedUpdateBannerUrl(url || "");
+    },
+    [debouncedUpdateBannerUrl]
+  );
+
+  if (!fileData || error) {
+    return;
+  }
+  // states
 
   //handlers
   const handleFileUpload = async () => {
@@ -98,17 +106,6 @@ const Header = ({ id }: { id: string }) => {
     }
   };
 
-  const debouncedUpdateBannerUrl = useMemo(
-    () => debounce(async (url: string) => updateBannerUrlToDb(url), 300),
-    [fileData.id]
-  );
-  const handleBannerChange = useCallback(
-    (url: string | null) => {
-      debouncedUpdateBannerUrl(url || "");
-    },
-    [debouncedUpdateBannerUrl]
-  );
-
   const updateIconId = async (iconId: string) => {
     if (!fileData.folderId) {
       return;
@@ -147,16 +144,6 @@ const Header = ({ id }: { id: string }) => {
   return (
     <div className="w-full">
       {/* colab and online users */}
-      <div className="w-full p-2 flex justify-between px-2">
-        <div></div>
-        <div className="flex">
-          {state.users.map((user) => (
-            <Avatar>
-              <AvatarFallback>{user.initials?.toUpperCase()}</AvatarFallback>
-            </Avatar>
-          ))}
-        </div>
-      </div>
       <div className="w-full min-h-[20vh] group/parent flex flex-col items-center justify-end">
         {/* Banner */}
         {fileData.bannerUrl && (

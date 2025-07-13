@@ -298,10 +298,9 @@ export const addCollaborators = async (users: User[], workspaceId: string) => {
 
 export const getUsersFromSearch = async (email: string) => {
   if (!email) return [];
-  const accounts = db
-    .select()
-    .from(users)
-    .where(ilike(users.email, `${email}%`));
+  const accounts = await db.query.users.findMany({
+    where: (fields, { ilike }) => ilike(fields.email, `%${email}%`),
+  });
   return accounts;
 };
 

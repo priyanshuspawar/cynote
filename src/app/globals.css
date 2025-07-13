@@ -143,3 +143,9 @@ body {
   background-image: radial-gradient(rgb(25, 25, 25) 1px, transparent 1px);
   background-size: 30px 30px;
 } */
+
+.bn-shadcn .bn-editor,
+.bn-shadcn .bn-side-menu {
+  background-color: var(--card) !important;
+  font-family: Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, Open Sans, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif !important;
+}
