@@ -1,4 +1,5 @@
 "use client";
+import Header from "@/components/editor/components/Header";
 import { Spinner } from "@/components/editor/ui/Spinner";
 import Editor from "@/components/liveblock-editor/editor";
 import {
@@ -53,11 +54,12 @@ const FilePage = () => {
   }
 
   return (
-    <div className="h-full w-full">
-      <span>File page</span>
+    <div className="flex w-full flex-col min-h-screen overflow-x-hidden overflow-y-auto">
+      <Header id={path[1]} />
       <Editor />
     </div>
   );
+  ``;
 };
 
 export default FilePage;

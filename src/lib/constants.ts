@@ -1372,50 +1372,9 @@ export const userColors = [
   "#f0abfc",
 ];
 
-export const SuggestedImages = [
-  {
-    id: 0,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner1.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 1,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner2.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 2,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner3.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 3,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner4.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 4,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner5.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 5,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner6.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 6,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner7.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 7,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner8.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-  {
-    id: 8,
-    imgUrl:
-      "https://govwklbidoldosqqvriv.supabase.co/storage/v1/object/public/banners/banner9.png?t=2024-08-25T10%3A55%3A10.629Z",
-  },
-];
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+
+export const SuggestedImages = Array.from({ length: 9 }, (_, i) => ({
+  id: i,
+  imgUrl: `${SUPABASE_URL}/storage/v1/object/public/banners/banner${i + 1}.png`,
+}));

@@ -235,7 +235,7 @@ const Header = ({ id }: { id: string }) => {
         />
         <div
           onDoubleClick={handleDoubleClick}
-          className="my-4 flex justify-start w-4/6"
+          className="flex justify-start w-[63%]"
         >
           <input
             onBlur={handleTitleBlur}
@@ -275,7 +275,7 @@ const Options = ({
   };
 
   return (
-    <div className="w-4/6 flex items-start relative">
+    <div className="w-[65%] flex items-start relative">
       <div className="w-fit gap-2 grid grid-cols-3 group/options transition-all transform duration-300 ease-in">
         {/* Icon */}
         <div className={cn("relative", { "col-span-full": emoji !== "" })}>

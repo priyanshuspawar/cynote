@@ -31,8 +31,8 @@ function BlockNote({
     },
   });
   return (
-    <div className="relative mx-auto max-w-6xl">
-      <BlockNoteView editor={editor} theme={"dark"} className="min-h-screen" />
+    <div className="relative w-full mx-auto max-w-6xl h-full">
+      <BlockNoteView editor={editor} theme={"dark"} className="h-full" />
     </div>
   );
 }
@@ -56,11 +56,11 @@ const Editor = () => {
     return null;
   }
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="flex items-center gap-2 justify-end mb-10">
-        {/*wip translate document AI */}
-        {/*wip chat to document AI */}
-      </div>
+    <div className="max-w-6xl w-full h-full mx-auto flex flex-col flex-grow">
+      {/* <div className="flex items-center gap-2 justify-end mb-10"> */}
+      {/*wip translate document AI */}
+      {/*wip chat to document AI */}
+      {/* </div> */}
       {/* blocknote notion */}
       <BlockNote doc={doc} provider={provider} darkMode={true} />
     </div>

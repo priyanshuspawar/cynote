@@ -45,9 +45,8 @@ const FollowPointer = ({
         <path d="M14.082 2.182a.5.5 0 0 1 .103.557L8.528 15.467a.5.5 0 0 1-.917-.007L7.57 10.094.803 8.652a.5.5 0 1 0-.006-.916l12.728-5.657a.5.5 0 0 1 .556.103z"></path>
       </svg>
       <motion.div
-        style={{
-          backgroundColor: color,
-        }}
+        className="absolute top-3 left-2 rounded-3xl p-2"
+        style={{ backgroundColor: color, borderRadius: 20 }}
         initial={{
           scale: 0.5,
           opacity: 0,
@@ -61,7 +60,9 @@ const FollowPointer = ({
           opacity: 0,
         }}
       >
-        {info?.email}
+        <p className="whitespace-nowrap text-sm leading-relaxed text-white">
+          {info.email}
+        </p>
       </motion.div>
     </motion.div>
   );
