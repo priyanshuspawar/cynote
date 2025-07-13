@@ -1,5 +1,5 @@
-"use client"
-import React, { useState } from 'react';
+"use client";
+import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,8 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog';
-import clsx from 'clsx';
+} from "@/components/ui/dialog";
+import clsx from "clsx";
 
 interface CustomDialogTriggerProps {
   header?: string;
@@ -25,10 +25,10 @@ const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
   description,
   className,
 }) => {
-  const [isDialogOpen,setIsDialogOpen] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   return (
     <Dialog onOpenChange={setIsDialogOpen}>
-      <DialogTrigger className={clsx('', className)}>{children}</DialogTrigger>
+      <DialogTrigger className={clsx("", className)}>{children}</DialogTrigger>
       <DialogContent
         className="h-screen
         block
@@ -42,9 +42,7 @@ const CustomDialogTrigger: React.FC<CustomDialogTriggerProps> = ({
           <DialogTitle>{header}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        <div>
-        {content}
-        </div>
+        <div>{content}</div>
       </DialogContent>
     </Dialog>
   );

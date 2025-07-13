@@ -1,12 +1,5 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { User } from "@/lib/supabase/supabase.types";
 import { useSupabaseUser } from "@/lib/providers/supabase-user-provider";
 import {
@@ -46,7 +39,7 @@ const CollaboratorSearch = ({
   const onChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (timeRef) clearTimeout(timeRef.current);
     timeRef.current = setTimeout(async () => {
-        const res = await getUsersFromSearch(e.target.value);
+      const res = await getUsersFromSearch(e.target.value);
       setSearchResults(res);
     }, 450);
   };
