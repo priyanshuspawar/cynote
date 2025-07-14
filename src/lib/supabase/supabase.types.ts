@@ -8,6 +8,7 @@ import {
   subscriptions,
   users,
   workspaces,
+  tags,
 } from "../../../migrations/schema";
 
 export type Json =
@@ -481,6 +482,7 @@ export type File = InferSelectModel<typeof files>;
 export type Product = InferSelectModel<typeof products>;
 export type Price = InferSelectModel<typeof prices> & { products?: Product };
 export type Customer = InferSelectModel<typeof customers>;
+export type Tag = InferSelectModel<typeof tags>;
 export type Subscription = InferSelectModel<typeof subscriptions> & {
   prices?: Price;
 };

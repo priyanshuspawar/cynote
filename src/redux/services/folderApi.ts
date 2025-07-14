@@ -14,6 +14,7 @@ export const folderApi = createApi({
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
     // Fetch all folders in a workspace
+
     getFolders: builder.query({
       queryFn: async (workspaceId: string) => {
         const { data } = await getFolders(workspaceId);

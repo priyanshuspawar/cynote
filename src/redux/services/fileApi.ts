@@ -5,8 +5,12 @@ import {
   updateFile,
   getFilesDetails,
 } from "@/lib/supabase/queries";
-import { File } from "@/lib/supabase/supabase.types";
+import { File, Tag } from "@/lib/supabase/supabase.types";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
+
+type FileWithTag = File & {
+  tags: Tag[];
+};
 
 export const fileApi = createApi({
   reducerPath: "fileApi",
@@ -14,55 +18,73 @@ export const fileApi = createApi({
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
     // Fetch files in a folder
-    getFiles: builder.query({
+    getFiles: builder.query<FileWithTag[], string>({
       queryFn: async (folderId: string) => {
         const { data, error } = await getFiles(folderId);
-        if (error) return { error: { message: error } }; // Handle errors properly
-        return { data };
+        if (error) return { error: { message: error } };
+
+        return { data: data as FileWithTag[] };
       },
-      providesTags: ["File"],
+      providesTags: (result, error, folderId) => [
+        { type: "File", id: `folder-${folderId}` },
+      ],
+      keepUnusedDataFor: 60 * 10,
     }),
 
     // Fetch details of a specific file
-    getFilesDetails: builder.query({
-      keepUnusedDataFor: 1000,
+    getFilesDetails: builder.query<FileWithTag[], string>({
       queryFn: async (fileId: string) => {
         const { data, error } = await getFilesDetails(fileId);
-        if (error) return { error: { message: error } }; // Handle errors properly
-        return { data };
+        if (error) return { error: { message: error } };
+        if (!data) {
+          return {
+            error: { message: "File not found" },
+          };
+        }
+        // Ensure the result is an array of FileWithTag
+        const files: FileWithTag[] = Array.isArray(data)
+          ? data.map((file: any) => ({
+              ...file,
+              tags: (file.tags || []).map((tag: any) => ({
+                id: tag.id ?? tag.tagId,
+                name: tag.name ?? "",
+                createdAt: tag.createdAt ?? "",
+                color: tag.color ?? null,
+                createdBy: tag.createdBy ?? "",
+              })),
+            }))
+          : [
+              {
+                ...data,
+                tags: (data.tags || []).map((tag: any) => ({
+                  id: tag.id ?? tag.tagId,
+                  name: tag.name ?? "",
+                  createdAt: tag.createdAt ?? "",
+                  color: tag.color ?? null,
+                  createdBy: tag.createdBy ?? "",
+                })),
+              },
+            ];
+        return { data: files };
       },
-      onQueryStarted: async (fileId, { dispatch, queryFulfilled }) => {
-        try {
-          const { data } = await queryFulfilled;
-          if (data && data.folderId) {
-            dispatch(
-              fileApi.util.updateQueryData(
-                "getFiles",
-                data.folderId,
-                (draftFile) => {
-                  if (!draftFile) return [];
-                  const index = draftFile.findIndex(
-                    (file) => file.id === fileId
-                  );
-                  if (index !== -1) {
-                    draftFile[index] = { ...draftFile[index] };
-                  }
-                }
-              )
-            );
-          }
-          return;
-        } catch (error) {}
-      },
-      providesTags: ["File"],
+      providesTags: (result, error, fileId) => [{ type: "File", id: fileId }],
+      keepUnusedDataFor: 1000,
     }),
 
     // Create a new file with optimistic updates
-    createFile: builder.mutation({
+    createFile: builder.mutation<FileWithTag, File>({
       queryFn: async (newFile: File) => {
         const { data, error } = await createFile(newFile);
-        if (error) return { error: { message: error } }; // Handle errors properly
-        return { data }; // Return the created file
+        if (error || !data)
+          return { error: { message: error || "No data returned" } };
+
+        // Transform the returned File to FileWithTag by adding empty tags array
+        const fileWithTag: FileWithTag = {
+          ...data,
+          tags: [], // Add empty tags array since newly created files don't have tags
+        };
+
+        return { data: fileWithTag };
       },
       onQueryStarted: async (file, { dispatch, queryFulfilled }) => {
         if (!file.folderId || !file) return;
@@ -73,38 +95,111 @@ export const fileApi = createApi({
             "getFiles",
             file.folderId,
             (draftFiles) => {
-              draftFiles?.push(file); // Add the new file optimistically
+              if (draftFiles) {
+                draftFiles.push({
+                  ...file,
+                  tags: [], // Add empty tags array for FileWithTag type
+                });
+              }
             }
           )
         );
 
         try {
-          await queryFulfilled;
-        } catch (error) {
-          patchResult.undo(); // Rollback if mutation fails
-        }
-      },
-      invalidatesTags: ["File"], // Invalidate file list to refresh after mutation
-    }),
-    deleteFile: builder.mutation({
-      queryFn: async (fileId: string) => {
-        const { data, error } = await deletFile(fileId);
-        return { data };
-      },
-      onQueryStarted: async (fileId, { dispatch, queryFulfilled }) => {
-        const patchResult = dispatch(
-          fileApi.util.updateQueryData("getFiles", fileId, (draftFiles) => {
-            return draftFiles?.filter((file) => file.id !== fileId);
-          })
-        );
-        try {
-          await queryFulfilled;
+          const { data } = await queryFulfilled;
+          // Update the optimistic entry with the actual server response
+          dispatch(
+            fileApi.util.updateQueryData(
+              "getFiles",
+              file.folderId,
+              (draftFiles) => {
+                if (draftFiles) {
+                  const index = draftFiles.findIndex((f) => f.id === file.id);
+                  if (index !== -1) {
+                    draftFiles[index] = data; // data is already FileWithTag
+                  }
+                }
+              }
+            )
+          );
         } catch (error) {
           patchResult.undo();
         }
       },
+      invalidatesTags: (result, error, file) => [
+        { type: "File", id: `folder-${file.folderId}` },
+      ],
     }),
-    updateFile: builder.mutation({
+
+    // Delete a file
+    deleteFile: builder.mutation<string, string>({
+      queryFn: async (fileId: string) => {
+        const { data, error } = await deletFile(fileId);
+        if (error) return { error: { message: error } };
+        return { data };
+      },
+      onQueryStarted: async (
+        fileId,
+        { dispatch, queryFulfilled, getState }
+      ) => {
+        // We need to find which folder this file belongs to for optimistic updates
+        const state = getState() as any;
+        const fileApiState = state.fileApi;
+
+        // Find the folder that contains this file
+        let targetFolderId: string | null = null;
+        Object.entries(fileApiState.queries).forEach(
+          ([key, query]: [string, any]) => {
+            if (key.startsWith("getFiles(") && query.data) {
+              const files = query.data as FileWithTag[];
+              if (files.some((file) => file.id === fileId)) {
+                // Extract folderId from the query key
+                const match = key.match(/getFiles\("([^"]+)"\)/);
+                if (match) {
+                  targetFolderId = match[1];
+                }
+              }
+            }
+          }
+        );
+
+        let patchResult: any;
+        if (targetFolderId) {
+          patchResult = dispatch(
+            fileApi.util.updateQueryData(
+              "getFiles",
+              targetFolderId,
+              (draftFiles) => {
+                if (draftFiles) {
+                  return draftFiles.filter((file) => file.id !== fileId);
+                }
+                return draftFiles;
+              }
+            )
+          );
+        }
+
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          if (patchResult) {
+            patchResult.undo();
+          }
+        }
+      },
+      invalidatesTags: (result, error, fileId) => [
+        { type: "File", id: fileId },
+      ],
+    }),
+
+    // Update a file
+    updateFile: builder.mutation<
+      null, // Changed return type to FileWithTag for consistency
+      {
+        updatedData: { folderId: string } & Omit<Partial<File>, "id">;
+        fileId: string;
+      }
+    >({
       queryFn: async ({
         updatedData,
         fileId,
@@ -114,9 +209,9 @@ export const fileApi = createApi({
       }) => {
         const { data, error } = await updateFile(updatedData, fileId);
         if (error) {
-          return { error };
+          return { error: { message: error } };
         }
-        return { data };
+        return { data: null };
       },
       onQueryStarted: async (
         { fileId, updatedData },
@@ -125,26 +220,31 @@ export const fileApi = createApi({
         if (!updatedData.folderId) {
           return;
         }
-        // const patchSingleFile = dispatch(fileApi.util.)
+
         const patchResult = dispatch(
           fileApi.util.updateQueryData(
             "getFiles",
             updatedData.folderId,
-            (draftFile) => {
-              if (!draftFile) return [];
-              const index = draftFile.findIndex((file) => file.id == fileId);
+            (draftFiles) => {
+              if (!draftFiles) return;
+              const index = draftFiles.findIndex((file) => file.id === fileId);
               if (index !== -1) {
-                draftFile[index] = { ...draftFile[index], ...updatedData };
+                draftFiles[index] = { ...draftFiles[index], ...updatedData };
               }
             }
           )
         );
+
         try {
           await queryFulfilled;
         } catch (error) {
           patchResult.undo();
         }
       },
+      invalidatesTags: (result, error, { fileId, updatedData }) => [
+        { type: "File", id: fileId },
+        { type: "File", id: `folder-${updatedData.folderId}` },
+      ],
     }),
   }),
 });

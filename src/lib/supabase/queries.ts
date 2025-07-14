@@ -1,9 +1,23 @@
 "use server";
-import { and, eq, notExists, ilike } from "drizzle-orm";
-import { files, folders, users, workspaces } from "../../../migrations/schema";
+import { and, eq, notExists, inArray } from "drizzle-orm";
+import {
+  files,
+  fileTags,
+  folders,
+  tags,
+  users,
+  workspaces,
+} from "../../../migrations/schema";
 import db from "./db";
 import { validate } from "uuid";
-import { Folder, Subscription, workspace, File, User } from "./supabase.types";
+import {
+  Folder,
+  Subscription,
+  workspace,
+  File,
+  User,
+  Tag,
+} from "./supabase.types";
 import { collaborators } from "./schema";
 import { createClient } from "./helpers/server";
 
@@ -94,12 +108,13 @@ export const getFilesDetails = async (fileId: string) => {
       error: "Error",
     };
   try {
-    const response = (await db
-      .select()
-      .from(files)
-      .where(eq(files.id, fileId))
-      .limit(1)) as File[];
-    return { data: response[0], error: null };
+    const response = await db.query.files.findFirst({
+      where: (table, { eq }) => eq(table.id, fileId),
+      with: {
+        tags: true, // Include tags in the results
+      },
+    });
+    return { data: response, error: null };
   } catch (error) {
     console.log("🔴Error", error);
     return { data: null, error: "Error" };
@@ -327,18 +342,55 @@ export const updateFolder = async (
   }
 };
 
-export const getFiles = async (folderId: string) => {
+export const getFiles = async (folderId: string, skip?: number) => {
   const isValid = validate(folderId);
   if (!isValid) return { data: [], error: "Error" }; // Return empty array on validation failure
+  skip = skip || 0; // Default to 0 if skip is not provided
   try {
-    const results = (await db
-      .select()
-      .from(files)
-      .orderBy(files.createdAt)
-      .where(eq(files.folderId, folderId))) as File[] | [];
-    return { data: results, error: null }; // Ensure data is always an array
+    const results = await db.query.files.findMany({
+      where: (table, { eq }) => eq(table.folderId, folderId),
+      orderBy: (table, { asc }) => asc(table.createdAt),
+      with: {
+        tags: {
+          with: {
+            tag: true, // Include tag details
+          },
+        },
+      },
+      limit: 20,
+      offset: skip,
+    });
+    let data = results.map((file) => ({
+      ...file,
+      tags: file.tags.map((item) => item.tag),
+    }));
+    return { data, error: null }; // Ensure data is always an array
   } catch (error) {
     console.log(error);
+    return { data: [], error: "Error" }; // Return empty array on error
+  }
+};
+
+export const getFilesForFolderPage = async (
+  folderId: string,
+  skip?: number
+) => {
+  const isValid = validate(folderId);
+  if (!isValid) return { data: [], error: "Error" }; // Return empty array on validation failure
+  skip = skip || 0; // Default to 0 if skip is not provided
+  try {
+    const results = await db.query.files.findMany({
+      where: (table, { eq }) => eq(table.folderId, folderId),
+      orderBy: (table, { asc }) => asc(table.createdAt),
+      with: {
+        tags: true, // Include tags in the results
+      },
+      limit: 20,
+      offset: skip,
+    });
+
+    return { data: results, error: null }; // Ensure data is always an array
+  } catch (error) {
     return { data: [], error: "Error" }; // Return empty array on error
   }
 };
@@ -421,4 +473,129 @@ export const removeCollaborators = async (
         );
     }
   });
+};
+
+export const fetchTags = async () => {
+  try {
+    const results = await db.query.tags.findMany({
+      orderBy: (table, { asc }) => asc(table.createdAt),
+    });
+    return { data: results, error: null };
+  } catch (error) {
+    return { data: [], error: "Error fetching tags" };
+  }
+};
+
+export const createTag = async (newTag: { name: string; color?: string }) => {
+  try {
+    const user = await getUserServer();
+    if (!user) {
+      return { data: null, error: "User not authenticated" };
+    }
+    const insertData: { name: string; createdBy: string; color?: string } = {
+      name: newTag.name,
+      createdBy: user,
+    };
+    if (newTag.color !== undefined) {
+      insertData.color = newTag.color;
+    }
+    const results = await db.insert(tags).values(insertData).returning();
+    return { data: results[0], error: null };
+  } catch (error) {
+    return { data: null, error: "Error creating tag" };
+  }
+};
+
+export const updateTag = async (
+  updatedTag: { id: string } & Partial<Omit<Tag, "id">>
+) => {
+  try {
+    const user = await getUserServer();
+    if (!user) {
+      return { data: null, error: "User not authenticated" };
+    }
+    await db
+      .update(tags)
+      .set(updatedTag)
+      .where(and(eq(tags.id, updatedTag.id), eq(tags.createdBy, user)));
+    return { data: null, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: null, error: "Error updating tag" };
+  }
+};
+
+export const deleteTag = async (tagId: string) => {
+  if (!tagId) return { error: "Tag not found" };
+  try {
+    const user = await getUserServer();
+    if (!user) {
+      return { data: null, error: "User not authenticated" };
+    }
+    await db
+      .delete(tags)
+      .where(and(eq(tags.id, tagId), eq(tags.createdBy, user)));
+    return { data: "Tag deleted successfully" };
+  } catch (error) {
+    return { error: "Error deleting tag" };
+  }
+};
+
+export const applyTagsToFile = async (fileId: string, tags: string[]) => {
+  if (!fileId || !tags.length) return { error: "File or Tag not found" };
+  try {
+    await db.insert(fileTags).values(tags.map((tagId) => ({ fileId, tagId })));
+    return { data: "Tags applied successfully" };
+  } catch (error) {
+    return { error: "Error applying tags to file" };
+  }
+};
+export const removeTagsFromFile = async (fileId: string, tags: string[]) => {
+  if (!fileId || !tags.length) return { error: "File or Tag not found" };
+  try {
+    const userId = await getUserServer();
+    if (!userId) return { error: "User not authenticated" };
+    const file = await db.query.files.findFirst({
+      where: (table, { eq }) => eq(table.id, fileId),
+    });
+    if (!file) return { error: "File not found" };
+    const workspace = await db.query.workspaces.findFirst({
+      where: (table, { eq }) => eq(table.id, file.workspaceId),
+    });
+    if (!workspace) {
+      return { error: "Not found workspace" };
+    }
+    if (workspace.workspaceOwner !== userId) {
+      const collaborators = await db.query.collaborators.findMany({
+        where: (table, { eq }) => eq(table.workspaceId, file.workspaceId),
+      });
+      const isUserCollaborator = collaborators.some(
+        (collaborator) => collaborator.userId === userId
+      );
+      if (!isUserCollaborator) {
+        return { error: "User not authorized to remove tags from this file" };
+      }
+    }
+
+    await db
+      .delete(fileTags)
+      .where(and(eq(fileTags.fileId, fileId), inArray(fileTags.tagId, tags)));
+    return { data: "Tags unassigned successfully" };
+  } catch (error) {
+    return { error: "Error removing tags to file" };
+  }
+};
+
+export const getTagsByFile = async (fileId: string) => {
+  const isValid = validate(fileId);
+  if (!isValid) return { data: [], error: "Error" };
+  try {
+    const results = await db.query.fileTags.findMany({
+      where: (table, { eq }) => eq(table.fileId, fileId),
+    });
+    return { data: results, error: null };
+  } catch (error) {
+    console.error(error);
+    return { data: [], error: "Error fetching tags for file" };
+  }
 };

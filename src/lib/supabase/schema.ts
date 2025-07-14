@@ -8,6 +8,7 @@ import {
   boolean,
   bigint,
   integer,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 import { relations, sql } from "drizzle-orm";
@@ -227,6 +228,33 @@ export const collaborators = pgTable("collaborators", {
     .references(() => users.id, { onDelete: "cascade" }),
 });
 
+export const tags = pgTable("tags", {
+  id: uuid("id").defaultRandom().primaryKey().notNull(),
+  name: text("name").notNull().unique(),
+  color: text("color"), // optional: hex code or Tailwind class
+  createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  createdBy: uuid("created_by")
+    .notNull()
+    .references(() => users.id),
+});
+
+export const fileTags = pgTable(
+  "file_tags",
+  {
+    fileId: uuid("file_id")
+      .notNull()
+      .references(() => files.id, { onDelete: "cascade" }),
+    tagId: uuid("tag_id")
+      .notNull()
+      .references(() => tags.id, { onDelete: "cascade" }),
+  },
+  (table) => ({
+    pk: primaryKey(table.fileId, table.tagId), // composite PK
+  })
+);
+
 // Relations
 export const productsRelations = relations(products, ({ many }) => ({
   prices: many(prices),
@@ -236,5 +264,24 @@ export const pricesRelations = relations(prices, ({ one }) => ({
   product: one(products, {
     fields: [prices.productId],
     references: [products.id],
+  }),
+}));
+
+export const filesRelations = relations(files, ({ many }) => ({
+  tags: many(fileTags),
+}));
+
+export const tagsRelations = relations(tags, ({ many }) => ({
+  files: many(fileTags),
+}));
+
+export const fileTagsRelations = relations(fileTags, ({ one }) => ({
+  file: one(files, {
+    fields: [fileTags.fileId],
+    references: [files.id],
+  }),
+  tag: one(tags, {
+    fields: [fileTags.tagId],
+    references: [tags.id],
   }),
 }));
