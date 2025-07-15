@@ -115,7 +115,15 @@ export const tagApi = createApi({
       providesTags: (result, error, fileId) => [{ type: "Tag", id: fileId }],
     }),
     applyTagsToFile: builder.mutation({
-      queryFn: async ({ fileId, tags }: { fileId: string; tags: Tag[] }) => {
+      queryFn: async ({
+        fileId,
+        tags,
+        folderId,
+      }: {
+        fileId: string;
+        tags: Tag[];
+        folderId: string;
+      }) => {
         const { data, error } = await applyTagsToFile(
           fileId,
           tags.map((tag) => tag.id)
@@ -124,34 +132,58 @@ export const tagApi = createApi({
         return { data: "Tag applied successfully" };
       },
       onQueryStarted: async (
-        { fileId, tags },
+        { fileId, tags, folderId },
         { dispatch, queryFulfilled }
       ) => {
+        // Update tagApi cache
         const patchResult = dispatch(
           tagApi.util.updateQueryData("getTagsByFile", fileId, (draftTags) => {
             if (!draftTags) return [];
             draftTags = [
               ...draftTags,
               ...tags.map((tag) => ({ fileId, tagId: tag.id })),
-            ]; // Assuming Tag has name and color properties
+            ];
             return draftTags;
           })
         );
 
-        const patchResultFile = dispatch(
-          fileApi.util.updateQueryData("getFiles", fileId, (draftTags) => {
-            return draftTags.map((file) =>
-              file.id === fileId
-                ? { ...file, tags: [...file.tags, ...tags] }
-                : file
-            );
-          })
+        // Update fileApi cache for getFiles query
+        let patchResultFile;
+        if (folderId) {
+          patchResultFile = dispatch(
+            fileApi.util.updateQueryData("getFiles", folderId, (draftFiles) => {
+              if (!draftFiles) return [];
+              return draftFiles.map((file) =>
+                file.id === fileId
+                  ? { ...file, tags: [...file.tags, ...tags] }
+                  : file
+              );
+            })
+          );
+        }
+
+        // Update fileApi cache for getFilesDetails query
+        const patchResultFileDetails = dispatch(
+          fileApi.util.updateQueryData(
+            "getFilesDetails",
+            fileId,
+            (draftFiles) => {
+              if (!draftFiles) return [];
+              return draftFiles.map((file) =>
+                file.id === fileId
+                  ? { ...file, tags: [...file.tags, ...tags] }
+                  : file
+              );
+            }
+          )
         );
+
         try {
           await queryFulfilled;
         } catch (error) {
           patchResult.undo();
-          patchResultFile.undo();
+          if (patchResultFile) patchResultFile.undo();
+          patchResultFileDetails.undo();
         }
       },
       invalidatesTags: (result, error, { fileId }) => [
@@ -159,15 +191,24 @@ export const tagApi = createApi({
       ],
     }),
     removeTagsFromFile: builder.mutation({
-      queryFn: async ({ fileId, tags }: { fileId: string; tags: string[] }) => {
+      queryFn: async ({
+        fileId,
+        tags,
+        folderId,
+      }: {
+        fileId: string;
+        tags: string[];
+        folderId?: string;
+      }) => {
         const { data, error } = await removeTagsFromFile(fileId, tags); // Replace with actual remove function
         if (error) return { error: { message: error } };
         return { data: "Tag removed successfully" };
       },
       onQueryStarted: async (
-        { fileId, tags },
+        { fileId, tags, folderId },
         { dispatch, queryFulfilled }
       ) => {
+        // Update tagApi cache
         const patchResult = dispatch(
           tagApi.util.updateQueryData("getTagsByFile", fileId, (draftTags) => {
             if (!draftTags) return [];
@@ -175,10 +216,50 @@ export const tagApi = createApi({
             return draftTags;
           })
         );
+
+        // Update fileApi cache for getFiles query
+        let patchResultFile;
+        if (folderId) {
+          patchResultFile = dispatch(
+            fileApi.util.updateQueryData("getFiles", folderId, (draftFiles) => {
+              if (!draftFiles) return [];
+              return draftFiles.map((file) =>
+                file.id === fileId
+                  ? {
+                      ...file,
+                      tags: file.tags.filter((tag) => !tags.includes(tag.id)),
+                    }
+                  : file
+              );
+            })
+          );
+        }
+
+        // Update fileApi cache for getFilesDetails query
+        const patchResultFileDetails = dispatch(
+          fileApi.util.updateQueryData(
+            "getFilesDetails",
+            fileId,
+            (draftFiles) => {
+              if (!draftFiles) return [];
+              return draftFiles.map((file) =>
+                file.id === fileId
+                  ? {
+                      ...file,
+                      tags: file.tags.filter((tag) => !tags.includes(tag.id)),
+                    }
+                  : file
+              );
+            }
+          )
+        );
+
         try {
           await queryFulfilled;
         } catch (error) {
           patchResult.undo();
+          if (patchResultFile) patchResultFile.undo();
+          patchResultFileDetails.undo();
         }
       },
       invalidatesTags: (result, error, { fileId }) => [

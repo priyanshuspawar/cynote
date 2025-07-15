@@ -29,15 +29,10 @@ interface TagManagementDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   files: File[];
-  selectedFiles: string | null;
-  onCreateTag: (name: string, color: string) => Promise<Tag>;
-  onUpdateTag: (tagId: string, updates: Partial<Tag>) => void;
-  onDeleteTag: (tagId: string) => void;
-  onApplyTags: (
-    fileIds: string[],
-    tagsToAdd: Tag[],
-    tagsToRemove: Tag[]
-  ) => void;
+  selectedFiles: string[];
+  onCreateTag: (name: string, color: string) => Promise<Tag | null>;
+  onUpdateTag: (tagId: string, updates: Partial<Tag>) => Promise<void>;
+  onDeleteTag: (tagId: string) => Promise<void>;
 }
 
 export function TagManagementDialog({
@@ -45,7 +40,6 @@ export function TagManagementDialog({
   onOpenChange,
   files,
   selectedFiles,
-
   onCreateTag,
   onUpdateTag,
   onDeleteTag,
@@ -56,27 +50,52 @@ export function TagManagementDialog({
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [selectedTagsToAdd, setSelectedTagsToAdd] = useState<Tag[]>([]);
   const [selectedTagsToRemove, setSelectedTagsToRemove] = useState<Tag[]>([]);
-  // Get common tags across selected files
+
   const { data: availableTags } = useGetTagsQuery({});
-  const targetFile = useMemo(() => {
-    return files.find((f) => f.id === selectedFiles);
+  const [applyTagsToFile] = useApplyTagsToFileMutation();
+  const [removeAssignedTagsToFile] = useRemoveTagsFromFileMutation();
+
+  // Get selected files data
+  const targetFiles = useMemo(() => {
+    return files.filter((f) => selectedFiles.includes(f.id));
   }, [files, selectedFiles]);
-  const { data: selectedTags } = useGetTagsByFileQuery(targetFile?.id || "");
-  const selectedFileTags = useMemo(() => {
-    return (
-      availableTags?.filter((tag) =>
-        selectedTags?.some((fileTag) => fileTag.tagId === tag.id)
-      ) || []
-    );
-  }, [availableTags, selectedTags]);
+
+  // Get tags for all selected files
+  const fileTagsQueries = useGetTagsByFileQuery(selectedFiles[0] || "", {
+    skip: selectedFiles.length === 0,
+  });
+
+  // For multiple files, we need to handle common tags differently
+  const commonTags = useMemo(() => {
+    if (selectedFiles.length === 0 || !availableTags) return [];
+
+    // For single file selection, return all tags for that file
+    if (selectedFiles.length === 1) {
+      const fileTags = fileTagsQueries.data || [];
+      return availableTags.filter((tag) =>
+        fileTags.some((fileTag) => fileTag.tagId === tag.id)
+      );
+    }
+
+    // For multiple files, this would require more complex logic
+    // For now, return empty array to avoid confusion
+    return [];
+  }, [availableTags, fileTagsQueries.data, selectedFiles.length]);
 
   const availableTagsToAdd = useMemo(() => {
-    return (
-      availableTags?.filter(
-        (tag) => !selectedTags?.some((fileTag) => fileTag.tagId === tag.id)
-      ) || []
-    );
-  }, [availableTags, selectedTags]);
+    if (!availableTags) return [];
+
+    if (selectedFiles.length === 1) {
+      const fileTags = fileTagsQueries.data || [];
+      return availableTags.filter(
+        (tag) => !fileTags.some((fileTag) => fileTag.tagId === tag.id)
+      );
+    }
+
+    // For multiple files, return all tags
+    return availableTags;
+  }, [availableTags, fileTagsQueries.data, selectedFiles.length]);
+
   const handleCreateNewTag = async () => {
     if (newTagName.trim()) {
       const newTag = await onCreateTag(newTagName.trim(), newTagColor);
@@ -95,33 +114,46 @@ export function TagManagementDialog({
       setEditingTag(null);
     }
   };
-  const [applyTagsToFile] = useApplyTagsToFileMutation();
-  const [removeAssignedTagsToFile] = useRemoveTagsFromFileMutation();
-  const handleApplyTags = () => {
-    if (selectedFiles === null || !targetFile) {
-      toast.error("Please select a file to apply tags");
+
+  const handleApplyTags = async () => {
+    if (selectedFiles.length === 0 || targetFiles.length === 0) {
+      toast.error("Please select files to apply tags");
       return;
     }
+
     if (selectedTagsToAdd.length === 0 && selectedTagsToRemove.length === 0) {
       toast.error("No tags selected for changes");
       return;
     }
-    if (selectedTagsToAdd.length) {
-      applyTagsToFile({
-        fileId: targetFile.id,
-        tags: selectedTagsToAdd,
-      });
+
+    try {
+      // Apply changes to all selected files
+      for (const file of targetFiles) {
+        if (selectedTagsToAdd.length > 0) {
+          await applyTagsToFile({
+            fileId: file.id,
+            tags: selectedTagsToAdd,
+            folderId: file.folderId,
+          }).unwrap();
+        }
+
+        if (selectedTagsToRemove.length > 0) {
+          await removeAssignedTagsToFile({
+            fileId: file.id,
+            tags: selectedTagsToRemove.map((tag) => tag.id),
+          }).unwrap();
+        }
+      }
+
+      setSelectedTagsToAdd([]);
+      setSelectedTagsToRemove([]);
+      onOpenChange(false);
+      toast.success(
+        `Tags applied to ${targetFiles.length} file(s) successfully`
+      );
+    } catch (error) {
+      toast.error("Failed to apply tags to some files");
     }
-    if (selectedTagsToRemove.length) {
-      removeAssignedTagsToFile({
-        fileId: targetFile.id,
-        tags: selectedTagsToRemove.map((tag) => tag.id),
-      });
-    }
-    setSelectedTagsToAdd([]);
-    setSelectedTagsToRemove([]);
-    onOpenChange(false);
-    toast.success("Tags applied successfully");
   };
 
   return (
@@ -145,7 +177,7 @@ export function TagManagementDialog({
           </TabsList>
 
           <TabsContent value="apply" className="space-y-4">
-            {selectedFiles === null || !targetFile ? (
+            {selectedFiles.length === 0 || targetFiles.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 <TagIcon className="h-12 w-12 mx-auto mb-4 text-gray-300" />
                 <p>Select files to apply tags</p>
@@ -156,41 +188,66 @@ export function TagManagementDialog({
             ) : (
               <div className="space-y-4">
                 <div>
-                  <h4 className="font-medium mb-2">Selected File</h4>
+                  <h4 className="font-medium mb-2">
+                    Selected Files ({targetFiles.length})
+                  </h4>
                   <div className="text-sm text-gray-600 max-h-20 overflow-y-auto">
-                    <div
-                      key={targetFile.id}
-                      className="flex items-center gap-2 py-1"
-                    >
-                      <span>{targetFile.iconId}</span>
-                      <span>{targetFile.title}</span>
-                    </div>
+                    {targetFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center gap-2 py-1"
+                      >
+                        <span>{file.iconId}</span>
+                        <span>{file.title}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
 
                 <Separator />
 
-                <div>
-                  <h4 className="font-medium mb-2">Assigned Tags</h4>
-                  {selectedFileTags && selectedFileTags?.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {selectedFileTags?.map((tag) => (
-                        <Badge
-                          key={tag.id}
-                          className={`border !bg-[${tag.color}+20] !text-[${tag.color}] !border-[${tag.color}]`}
-                        >
-                          {tag.name}
-                        </Badge>
-                      ))}
+                {selectedFiles.length === 1 && (
+                  <>
+                    <div>
+                      <h4 className="font-medium mb-2">Current Tags</h4>
+                      {commonTags && commonTags.length > 0 ? (
+                        <div className="flex flex-wrap gap-2">
+                          {commonTags.map((tag) => (
+                            <Badge
+                              key={tag.id}
+                              style={{
+                                backgroundColor: `${tag.color}20`,
+                                color: tag.color ?? undefined,
+                                borderColor: tag.color ?? undefined,
+                              }}
+                              className="border"
+                            >
+                              {tag.name}
+                            </Badge>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-500">
+                          No tags assigned to selected file
+                        </p>
+                      )}
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-500">
-                      No tags assign to selected file
-                    </p>
-                  )}
-                </div>
+                    <Separator />
+                  </>
+                )}
 
-                <Separator />
+                {selectedFiles.length > 1 && (
+                  <>
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <p className="text-sm text-blue-800">
+                        <strong>Note:</strong> You have selected{" "}
+                        {selectedFiles.length} files. Tags will be applied to
+                        all selected files.
+                      </p>
+                    </div>
+                    <Separator />
+                  </>
+                )}
 
                 <TagSelector
                   type="add"
@@ -201,14 +258,16 @@ export function TagManagementDialog({
                   placeholder="Select tags to add..."
                 />
 
-                <TagSelector
-                  type="remove"
-                  availableTags={selectedFileTags}
-                  selectedTags={selectedTagsToRemove}
-                  onSelectionChange={setSelectedTagsToRemove}
-                  title="Remove Tags"
-                  placeholder="Select tags to remove..."
-                />
+                {selectedFiles.length === 1 && (
+                  <TagSelector
+                    type="remove"
+                    availableTags={commonTags}
+                    selectedTags={selectedTagsToRemove}
+                    onSelectionChange={setSelectedTagsToRemove}
+                    title="Remove Tags"
+                    placeholder="Select tags to remove..."
+                  />
+                )}
 
                 <div className="flex justify-end gap-2 pt-4">
                   <Button
@@ -228,7 +287,7 @@ export function TagManagementDialog({
                       selectedTagsToRemove.length === 0
                     }
                   >
-                    Apply Changes
+                    Apply to {targetFiles.length} File(s)
                   </Button>
                 </div>
               </div>
@@ -332,13 +391,15 @@ export function TagManagementDialog({
                         <>
                           <div className="flex items-center gap-3">
                             <Badge
-                              className={`border !bg-[${tag.color}+20] !text-[${tag.color}] !border-[${tag.color}]`}
+                              style={{
+                                backgroundColor: tag.color + "20",
+                                color: tag.color ?? undefined,
+                                borderColor: tag.color ?? undefined,
+                              }}
+                              className="border"
                             >
                               {tag.name}
                             </Badge>
-                            {/* <span className="text-sm text-gray-500">
-                              Used in {tagUsageCount(tag.id)} files
-                            </span> */}
                           </div>
                           <div className="flex items-center gap-1">
                             <Button

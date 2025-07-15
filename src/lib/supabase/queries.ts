@@ -145,18 +145,16 @@ export const getFolderDetails = async (folderId: string) => {
   const isValid = validate(folderId);
   if (!isValid)
     return {
-      data: [],
+      data: null,
       error: "Error",
     };
   try {
-    const response = (await db
-      .select()
-      .from(folders)
-      .where(eq(folders.id, folderId))
-      .limit(1)) as Folder[];
-    return { data: response, error: null };
+    const response = await db.query.folders.findFirst({
+      where: (fields, { eq }) => eq(fields.id, folderId),
+    });
+    return { data: response ?? null, error: null };
   } catch (error) {
-    return { data: [], error: "Error" };
+    return { data: null, error: "Error" };
   }
 };
 

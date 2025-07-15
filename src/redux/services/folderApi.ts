@@ -24,10 +24,18 @@ export const folderApi = createApi({
     }),
 
     // Fetch details of a specific folder
-    getFolderDetails: builder.query({
-      queryFn: async (folderId: string) => {
-        const { data } = await getFolderDetails(folderId);
-        return { data };
+    getFolderDetails: builder.query<Folder | null, string>({
+      async queryFn(folderId: string) {
+        try {
+          const { data, error } = await getFolderDetails(folderId);
+          if (error) {
+            return { error: "Failed to fetch folder" };
+          }
+          // Ensure data is either Folder or null
+          return { data: data };
+        } catch (e) {
+          return { error: "Failed to fetch folder" };
+        }
       },
       providesTags: ["Folder"],
     }),
