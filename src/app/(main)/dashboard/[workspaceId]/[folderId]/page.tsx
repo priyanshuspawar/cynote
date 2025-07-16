@@ -13,7 +13,7 @@ import {
 } from "@/redux/services/tagsApi";
 import { FilePlus, Plus, Tag as TagIcon } from "lucide-react";
 import { useParams } from "next/navigation";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,8 +36,14 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { useAppDispatch } from "@/redux/hooks";
+import {
+  setSelectedFolder,
+  setSelectedFolderId,
+} from "@/redux/features/selectedSlice";
 
 const FolderPage = () => {
+  const dispatch = useAppDispatch();
   const { folderId }: { folderId: string } = useParams();
   const { data: folder, isLoading: folderLoading } =
     useGetFolderDetailsQuery(folderId);
@@ -181,7 +187,12 @@ const FolderPage = () => {
       toast("Failed to delete tag");
     }
   };
-
+  useEffect(() => {
+    dispatch(setSelectedFolderId(folderId));
+    if (folder) {
+      dispatch(setSelectedFolder(folder));
+    }
+  }, [folderId, folder, dispatch]);
   if (isLoading || folderLoading) {
     return (
       <div className="h-full w-full flex items-center justify-center overflow-hidden">

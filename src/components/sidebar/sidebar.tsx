@@ -12,7 +12,6 @@ import {
   useGetPrivateWorkspacesQuery,
   useGetSharedWorkspacesQuery,
 } from "@/redux/services/workspaceApi";
-import { Spinner } from "@/components/editor/ui/Spinner";
 import {
   setSelectedWorkspace,
   setSelectedWorkspaceId,

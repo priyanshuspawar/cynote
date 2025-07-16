@@ -21,7 +21,13 @@ function RoomProvider({
         cursor: null,
       }}
     >
-      <ClientSideSuspense fallback={<Loader />}>
+      <ClientSideSuspense
+        fallback={
+          <div className="w-full h-full items-center justify-center">
+            <Loader />
+          </div>
+        }
+      >
         <LiveCursorRenderer>{children}</LiveCursorRenderer>
       </ClientSideSuspense>
     </RoomProviderWrapper>

@@ -20,6 +20,7 @@ import EmojiPicker from "@/components/global/emojiPicker";
 import { cn } from "@/lib/utils";
 import { useUser } from "@/lib/providers/colab-user-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Header = ({ id }: { id: string }) => {
   const { data: fileData, error, isError } = useGetFileDetailsQuery(id);
@@ -171,10 +172,16 @@ const Header = ({ id }: { id: string }) => {
                         onClick={() => handleBannerChange(banner.imgUrl)}
                         className="relative cursor-pointer aspect-square"
                       >
+                        <Skeleton className="absolute inset-0 w-full h-full" />
                         <Image
                           src={banner.imgUrl}
                           fill
                           alt={`Banner ${banner.id}`}
+                          className="object-cover"
+                          onLoadingComplete={() => {
+                            // Optionally hide skeleton after image loads
+                            // You can manage skeleton visibility with state if needed
+                          }}
                         />
                       </div>
                     ))}
@@ -316,10 +323,10 @@ const Options = ({
         </div>
 
         {/* Add Comment */}
-        <div className="flex text-washed-purple-700 hover:text-washed-purple-600 transition-colors cursor-pointer duration-500 ease-in-out items-center gap-2 text-sm p-2 group hover:bg-neutral-300/10 rounded-lg">
+        {/* <div className="flex text-washed-purple-700 hover:text-washed-purple-600 transition-colors cursor-pointer duration-500 ease-in-out items-center gap-2 text-sm p-2 group hover:bg-neutral-300/10 rounded-lg">
           <MessageCircle className="w-4 h-4" />
           <span className="leading-none">Add comment</span>
-        </div>
+        </div> */}
       </div>
     </div>
   );

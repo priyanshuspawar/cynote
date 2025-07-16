@@ -12,6 +12,7 @@ import "@blocknote/shadcn/style.css";
 import { debounce } from "lodash";
 import { useUpdateFileMutation } from "@/redux/services/fileApi";
 import { toast } from "sonner";
+import TranslateDocument from "./translate-document";
 function BlockNote({
   doc,
   provider,
@@ -82,6 +83,9 @@ const Editor = () => {
     <div className="max-w-6xl w-full h-full mx-auto flex flex-col flex-grow">
       {/* <div className="flex items-center gap-2 justify-end mb-10"> */}
       {/*wip translate document AI */}
+      <div className="mx-auto w-full px-[12vw] mt-2">
+        <TranslateDocument doc={doc} />
+      </div>
       {/*wip chat to document AI */}
       {/* </div> */}
       {/* blocknote notion */}
