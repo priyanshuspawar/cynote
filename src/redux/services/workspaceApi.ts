@@ -6,9 +6,19 @@ import {
   getSharedWorkspaces,
   updateWorkspace,
   deleteWorkspace,
+  getCollaborators,
 } from "@/lib/supabase/queries";
 import { workspace } from "@/lib/supabase/supabase.types";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
+
+export type CollabUser = {
+  id: string;
+
+  fullName: string | null;
+  avatarUrl: string | null;
+  email: string | null;
+  joinedAt: string;
+};
 
 export const workspaceApi = createApi({
   reducerPath: "workspaceApi",
@@ -153,6 +163,19 @@ export const workspaceApi = createApi({
       },
       invalidatesTags: ["Workspace"],
     }),
+    getCollaboratorOfWorkspace: builder.query<
+      CollabUser[],
+      { workspaceId: string }
+    >({
+      queryFn: async ({ workspaceId }) => {
+        try {
+          const response = await getCollaborators(workspaceId);
+          return { data: response };
+        } catch {
+          return { error: "Error" };
+        }
+      },
+    }),
   }),
 });
 
@@ -165,4 +188,5 @@ export const {
   useCreateWorkspaceMutation,
   useUpdateWorkspaceMutation,
   useDeleteWorkspaceMutation,
+  useGetCollaboratorOfWorkspaceQuery,
 } = workspaceApi;

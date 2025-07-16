@@ -67,6 +67,7 @@ const FolderPage = () => {
         folderId: folderId,
         data: null,
         createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         inTrash: null,
         title: newFileTitle ?? "Untitled",
         iconId: newFileEmoji,

@@ -32,7 +32,7 @@ export const fileApi = createApi({
     }),
 
     // Fetch details of a specific file
-    getFilesDetails: builder.query<FileWithTag[], string>({
+    getFileDetails: builder.query<FileWithTag, string>({
       queryFn: async (fileId: string) => {
         const { data, error } = await getFilesDetails(fileId);
         if (error) return { error: { message: error } };
@@ -42,30 +42,8 @@ export const fileApi = createApi({
           };
         }
         // Ensure the result is an array of FileWithTag
-        const files: FileWithTag[] = Array.isArray(data)
-          ? data.map((file: any) => ({
-              ...file,
-              tags: (file.tags || []).map((tag: any) => ({
-                id: tag.id ?? tag.tagId,
-                name: tag.name ?? "",
-                createdAt: tag.createdAt ?? "",
-                color: tag.color ?? null,
-                createdBy: tag.createdBy ?? "",
-              })),
-            }))
-          : [
-              {
-                ...data,
-                tags: (data.tags || []).map((tag: any) => ({
-                  id: tag.id ?? tag.tagId,
-                  name: tag.name ?? "",
-                  createdAt: tag.createdAt ?? "",
-                  color: tag.color ?? null,
-                  createdBy: tag.createdBy ?? "",
-                })),
-              },
-            ];
-        return { data: files };
+
+        return { data: data as unknown as FileWithTag };
       },
       providesTags: (result, error, fileId) => [{ type: "File", id: fileId }],
       keepUnusedDataFor: 1000,
@@ -196,7 +174,7 @@ export const fileApi = createApi({
     updateFile: builder.mutation<
       null, // Changed return type to FileWithTag for consistency
       {
-        updatedData: { folderId: string } & Omit<Partial<File>, "id">;
+        updatedData: Partial<File>;
         fileId: string;
       }
     >({
@@ -204,7 +182,7 @@ export const fileApi = createApi({
         updatedData,
         fileId,
       }: {
-        updatedData: { folderId: string } & Omit<Partial<File>, "id">;
+        updatedData: Partial<File>;
         fileId: string;
       }) => {
         const { data, error } = await updateFile(updatedData, fileId);
@@ -251,8 +229,7 @@ export const fileApi = createApi({
 
 export const {
   useGetFilesQuery,
-  useLazyGetFilesDetailsQuery,
-  useGetFilesDetailsQuery,
+  useGetFileDetailsQuery,
   useCreateFileMutation,
   useDeleteFileMutation,
   useUpdateFileMutation,

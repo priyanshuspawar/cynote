@@ -20,6 +20,7 @@ import {
 } from "./supabase.types";
 import { collaborators } from "./schema";
 import { createClient } from "./helpers/server";
+import { CollabUser } from "@/redux/services/workspaceApi";
 
 const getUserServer = async () => {
   const supabaseServer = createClient();
@@ -71,11 +72,10 @@ export const getFolders = async (workspaceId: string) => {
       error: "Error",
     };
   try {
-    const results: Folder[] | [] = await db
-      .select()
-      .from(folders)
-      .orderBy(folders.createdAt)
-      .where(eq(folders.workspaceId, workspaceId));
+    const results: Folder[] | [] = await db.query.folders.findMany({
+      where: (fields, { eq }) => eq(fields.workspaceId, workspaceId),
+      orderBy: (fields, { desc }) => desc(fields.updatedAt),
+    });
     return { data: results, error: null };
   } catch (error) {
     return { data: null, error: "Error" };
@@ -114,6 +114,9 @@ export const getFilesDetails = async (fileId: string) => {
         tags: true, // Include tags in the results
       },
     });
+    if (!response) {
+      return { data: null, error: "Error" };
+    }
     return { data: response, error: null };
   } catch (error) {
     console.log("🔴Error", error);
@@ -137,7 +140,7 @@ export const deleteFolder = async (folderId: string) => {
     await db.delete(folders).where(eq(folders.id, folderId));
     return { data: "Folder deleted successfully" };
   } catch (error) {
-    return { error };
+    return { error: "Error" };
   }
 };
 
@@ -319,10 +322,9 @@ export const getUsersFromSearch = async (email: string) => {
 
 export const createFolder = async (folder: Folder) => {
   try {
-    const results = await db.insert(folders).values(folder);
+    await db.insert(folders).values(folder);
     return { data: null, error: null };
   } catch (error) {
-    console.error(error);
     return { data: null, error: "Error" };
   }
 };
@@ -332,7 +334,10 @@ export const updateFolder = async (
   folderId: string
 ) => {
   try {
-    await db.update(folders).set(folder).where(eq(folders.id, folderId));
+    await db
+      .update(folders)
+      .set({ ...folder, updatedAt: new Date().toISOString() })
+      .where(eq(folders.id, folderId));
     return { data: null, error: null };
   } catch (error) {
     console.error(error);
@@ -422,16 +427,23 @@ export const getCollaborators = async (workspaceId: string) => {
     .from(collaborators)
     .where(eq(collaborators.workspaceId, workspaceId));
   if (!response.length) return [];
-  const userInformation: Promise<User | undefined>[] = response.map(
-    async (user) => {
+  const userInformation: Promise<CollabUser | undefined>[] = response.map(
+    async ({ userId, createdAt }) => {
       const exists = await db.query.users.findFirst({
-        where: (u, { eq }) => eq(u.id, user.userId),
+        where: (u, { eq }) => eq(u.id, userId),
+        columns: {
+          id: true,
+
+          fullName: true,
+          avatarUrl: true,
+          email: true,
+        },
       });
-      return exists;
+      return exists ? { ...exists, joinedAt: createdAt } : undefined;
     }
   );
   const resolvedUsers = await Promise.all(userInformation);
-  return resolvedUsers.filter(Boolean) as User[];
+  return resolvedUsers.filter(Boolean) as CollabUser[];
 };
 
 export const updateWorkspace = async (
@@ -597,3 +609,36 @@ export const getTagsByFile = async (fileId: string) => {
     return { data: [], error: "Error fetching tags for file" };
   }
 };
+
+export const updateModifiedAtFile = async (fileId: string) => {
+  try {
+    await db
+      .update(files)
+      .set({
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(files.id, fileId));
+  } catch (error) {
+    return;
+  }
+};
+
+export const searchFilesInWorkspace = async (
+  searchTerm: string,
+  workspaceId: string
+) => {
+  try {
+    const folders = await db.query.folders.findMany({
+      where: (fields, { eq, and, ilike }) =>
+        and(
+          eq(fields.workspaceId, workspaceId),
+          ilike(fields.title, `%${searchTerm}%`)
+        ),
+    });
+    return { data: folders };
+  } catch (error) {
+    return { error: "Error" };
+  }
+};
+
+export const getRecentFiles = async () => {};

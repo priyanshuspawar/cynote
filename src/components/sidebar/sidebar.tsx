@@ -2,6 +2,7 @@
 import React, { useEffect, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import WorkspaceDropdown from "./workspaceDropdown";
+import { Skeleton } from "@/components/ui/skeleton";
 import PlanUsage from "./plan-usage";
 import NativeNavigation from "./native-navigation";
 import { ScrollArea } from "../ui/scroll-area";
@@ -69,7 +70,28 @@ const SideBar = ({ params, className }: SideBarProps) => {
     collaboratingWorkspacesLoading ||
     sharedWorkspacesLoading
   ) {
-    return <Spinner />;
+    return (
+      <aside
+        className={twMerge(
+          "hidden h-screen sm:flex sm:flex-col w-[280px] justify-between shrink-0 p-4 md:gap-4 overflow-hidden",
+          className
+        )}
+      >
+        <div>
+          <div className="h-[10vh] w-full">
+            <Skeleton className="h-full w-full" />
+          </div>
+          <div className="my-4 h-[50vh] grid grid-cols-1 grid-rows-8 gap-2">
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+          </div>
+        </div>
+        <div>
+          <Skeleton className="h-16" />
+        </div>
+      </aside>
+    );
   }
 
   if (!privateWorkspaces || !sharedWorkspaces || !collaboratingWorkspaces) {
@@ -79,7 +101,7 @@ const SideBar = ({ params, className }: SideBarProps) => {
   return (
     <aside
       className={twMerge(
-        "hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between",
+        "hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between ",
         className
       )}
     >

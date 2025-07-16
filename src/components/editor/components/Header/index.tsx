@@ -5,7 +5,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  useGetFilesDetailsQuery,
+  useGetFileDetailsQuery,
   useUpdateFileMutation,
 } from "@/redux/services/fileApi";
 import React, { useCallback, useMemo, useRef, useState } from "react";
@@ -22,7 +22,7 @@ import { useUser } from "@/lib/providers/colab-user-provider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const Header = ({ id }: { id: string }) => {
-  const { data: fileData, error, isError } = useGetFilesDetailsQuery(id);
+  const { data: fileData, error, isError } = useGetFileDetailsQuery(id);
   const [updateFile, { error: fileUpdateError }] = useUpdateFileMutation();
   const supabase = createClient();
   const { toast } = useToast();

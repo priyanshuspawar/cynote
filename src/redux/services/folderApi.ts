@@ -4,6 +4,7 @@ import {
   getFolders,
   deleteFolder,
   updateFolder,
+  searchFilesInWorkspace,
 } from "@/lib/supabase/queries";
 import { Folder } from "@/lib/supabase/supabase.types";
 import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
@@ -39,11 +40,28 @@ export const folderApi = createApi({
       },
       providesTags: ["Folder"],
     }),
-
+    searchQueryFolders: builder.query<
+      Folder[],
+      { searchQuery: string; workspaceId: string }
+    >({
+      queryFn: async ({ searchQuery, workspaceId }) => {
+        const { data, error } = await searchFilesInWorkspace(
+          searchQuery,
+          workspaceId
+        );
+        if (error) {
+          return { error: "Error" };
+        }
+        return { data };
+      },
+    }),
     // Create a new folder with optimistic updates
     createFolder: builder.mutation({
       queryFn: async (folder: Folder) => {
-        const { data } = await createFolder(folder);
+        const { data, error } = await createFolder(folder);
+        if (error) {
+          return { error: "Error" };
+        }
         return { data };
       },
       onQueryStarted: async (folder, { dispatch, queryFulfilled }) => {
@@ -79,7 +97,10 @@ export const folderApi = createApi({
         folderId: string;
         updatedData: { workspaceId: string } & Omit<Partial<Folder>, "id">;
       }) => {
-        const { data } = await updateFolder(updatedData, folderId);
+        const { data, error } = await updateFolder(updatedData, folderId);
+        if (error) {
+          return { error: "Error" };
+        }
         return { data };
       },
       onQueryStarted: async (
@@ -119,7 +140,10 @@ export const folderApi = createApi({
     // Delete a folder with optimistic updates
     deleteFolder: builder.mutation({
       queryFn: async (folderId: string) => {
-        const { data } = await deleteFolder(folderId);
+        const { data, error } = await deleteFolder(folderId);
+        if (error) {
+          return { error: "Error" };
+        }
         return { data };
       },
       onQueryStarted: async (folderId, { dispatch, queryFulfilled }) => {
@@ -141,6 +165,8 @@ export const folderApi = createApi({
 
 export const {
   useGetFoldersQuery,
+  useSearchQueryFoldersQuery,
+  useLazySearchQueryFoldersQuery,
   useGetFolderDetailsQuery,
   useCreateFolderMutation,
   useUpdateFolderMutation,

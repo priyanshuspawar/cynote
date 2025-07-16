@@ -7,7 +7,7 @@ import {
   setSelectedFolderId,
 } from "@/redux/features/selectedSlice";
 import { useAppDispatch } from "@/redux/hooks";
-import { useGetFilesDetailsQuery } from "@/redux/services/fileApi";
+import { useGetFileDetailsQuery } from "@/redux/services/fileApi";
 import { redirect, useParams } from "next/navigation";
 import React, { useEffect } from "react";
 
@@ -18,7 +18,7 @@ const FilePage = () => {
   const path = fileId.split("folder");
 
   // Fetch file details
-  const { data, isLoading, error } = useGetFilesDetailsQuery(path[1]);
+  const { data, isLoading, error } = useGetFileDetailsQuery(path[1]);
 
   // Dispatch hooks
   const dispatch = useAppDispatch();

@@ -9,7 +9,9 @@ import { useCreateBlockNote } from "@blocknote/react";
 import "@blocknote/core/fonts/inter.css";
 import { stringToColor } from "@/lib/utils";
 import "@blocknote/shadcn/style.css";
-
+import { debounce } from "lodash";
+import { useUpdateFileMutation } from "@/redux/services/fileApi";
+import { toast } from "sonner";
 function BlockNote({
   doc,
   provider,
@@ -41,16 +43,37 @@ const Editor = () => {
   const room = useRoom();
   const [doc, setDoc] = useState<Y.Doc>();
   const [provider, setProvider] = useState<LiveblocksYjsProvider>();
+  const [updateFile] = useUpdateFileMutation();
+
   useEffect(() => {
+    const onDocChange = async () => {
+      try {
+        await updateFile({
+          fileId: room.id,
+          updatedData: {
+            updatedAt: new Date().toISOString(),
+          },
+        });
+      } catch (error) {
+        toast.error(
+          "An unexpected error occurred. Your changes may not have been saved."
+        );
+      }
+    };
+    const debouncedUpdateModifiedAt = debounce(() => {
+      onDocChange();
+    }, 1000 * 30); // Update every 30 seconds max
     const yDoc = new Y.Doc();
     const liveblocksProvider = new LiveblocksYjsProvider(room, yDoc);
     setDoc(yDoc);
     setProvider(liveblocksProvider);
-
+    yDoc.on("update", debouncedUpdateModifiedAt);
     return () => {
+      yDoc?.off("update", debouncedUpdateModifiedAt);
       yDoc?.destroy();
       liveblocksProvider?.destroy();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [room]);
   if (!doc || !provider) {
     return null;

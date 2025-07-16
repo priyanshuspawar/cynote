@@ -164,18 +164,14 @@ export const tagApi = createApi({
 
         // Update fileApi cache for getFilesDetails query
         const patchResultFileDetails = dispatch(
-          fileApi.util.updateQueryData(
-            "getFilesDetails",
-            fileId,
-            (draftFiles) => {
-              if (!draftFiles) return [];
-              return draftFiles.map((file) =>
-                file.id === fileId
-                  ? { ...file, tags: [...file.tags, ...tags] }
-                  : file
-              );
-            }
-          )
+          fileApi.util.updateQueryData("getFiles", fileId, (draftFiles) => {
+            if (!draftFiles) return [];
+            return draftFiles.map((file) =>
+              file.id === fileId
+                ? { ...file, tags: [...file.tags, ...tags] }
+                : file
+            );
+          })
         );
 
         try {
@@ -237,21 +233,17 @@ export const tagApi = createApi({
 
         // Update fileApi cache for getFilesDetails query
         const patchResultFileDetails = dispatch(
-          fileApi.util.updateQueryData(
-            "getFilesDetails",
-            fileId,
-            (draftFiles) => {
-              if (!draftFiles) return [];
-              return draftFiles.map((file) =>
-                file.id === fileId
-                  ? {
-                      ...file,
-                      tags: file.tags.filter((tag) => !tags.includes(tag.id)),
-                    }
-                  : file
-              );
-            }
-          )
+          fileApi.util.updateQueryData("getFiles", fileId, (draftFiles) => {
+            if (!draftFiles) return [];
+            return draftFiles.map((file) =>
+              file.id === fileId
+                ? {
+                    ...file,
+                    tags: file.tags.filter((tag) => !tags.includes(tag.id)),
+                  }
+                : file
+            );
+          })
         );
 
         try {

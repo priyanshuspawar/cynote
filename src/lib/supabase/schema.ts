@@ -96,11 +96,18 @@ export const workspaces = pgTable("workspaces", {
   inTrash: text("in_trash"),
   logo: text("logo"),
   bannerUrl: text("banner_url"),
+  isShared: boolean().default(false).notNull(),
 });
 
 export const folders = pgTable("folders", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "string",
+  })
     .defaultNow()
     .notNull(),
   title: text("title").notNull(),
@@ -116,6 +123,12 @@ export const folders = pgTable("folders", {
 export const files = pgTable("files", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", {
+    withTimezone: true,
+    mode: "string",
+  })
     .defaultNow()
     .notNull(),
   title: text("title").notNull(),
