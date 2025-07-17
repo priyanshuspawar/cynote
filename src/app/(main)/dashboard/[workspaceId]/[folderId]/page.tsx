@@ -36,7 +36,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { useAppDispatch } from "@/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
 import {
   setSelectedFolder,
   setSelectedFolderId,
@@ -44,6 +44,9 @@ import {
 
 const FolderPage = () => {
   const dispatch = useAppDispatch();
+  const { selectedWorkspace } = useAppSelector(
+    (state) => state.selectedEntities
+  );
   const { folderId }: { folderId: string } = useParams();
   const { data: folder, isLoading: folderLoading } =
     useGetFolderDetailsQuery(folderId);
@@ -225,7 +228,13 @@ const FolderPage = () => {
       <Breadcrumb className="my-6">
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/dashbaord">Workspace</BreadcrumbLink>
+            <BreadcrumbLink
+              href={`/dashbaord/${
+                selectedWorkspace?.title ?? folder.workspaceId
+              }`}
+            >
+              {selectedWorkspace?.title ?? "Workspace"}
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>

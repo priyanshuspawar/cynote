@@ -5,7 +5,6 @@ import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   const supabase = createClient();
-  console.log("Liveblocks auth endpoint hit");
   // Get authenticated user
   const { data, error: authError } = await supabase.auth.getUser();
   const user = data.user;
@@ -14,13 +13,10 @@ export async function POST(req: NextRequest) {
   }
 
   const { room } = await req.json();
-
   const session = liveblocks.prepareSession(user.email!, {
     userInfo: {
       email: user.email!,
-      avatar:
-        user.user_metadata?.avatar_url ||
-        "https://www.gravatar.com/avatar/?d=mp",
+      avatar: user.user_metadata?.avatar_url || "null",
     },
   });
 

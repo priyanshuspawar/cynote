@@ -25,10 +25,19 @@ import { useGetFolderDetailsQuery } from "@/redux/services/folderApi";
 import { useParams } from "next/navigation";
 import React, { useEffect, useMemo } from "react";
 import { createClient } from "@/lib/supabase/helpers/client";
-
+import { useUser, useOthers } from "@liveblocks/react/suspense";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { stringToColor } from "@/lib/utils";
 // Dynamically load the collaborative editor (outside component to avoid hook issues)
 
 const FilePage = () => {
+  const others = useOthers();
   const { fileId }: { fileId: string } = useParams();
   const path = useMemo(() => fileId.split("folder"), [fileId]);
   const state = useAppSelector((state) => state.selectedEntities);
@@ -48,6 +57,7 @@ const FilePage = () => {
   const dispatch = useAppDispatch();
   const { user } = useSupabaseUser();
   //list to realtime postgres changes
+
   useEffect(() => {
     const channel = supabase
       .channel(`realtime-file-update:${path[1]}`)
@@ -111,8 +121,6 @@ const FilePage = () => {
     );
   }
 
-  // Redirect if file is in trash
-
   return (
     <div className="flex w-full flex-col min-h-screen overflow-x-hidden overflow-y-auto">
       {data.inTrash && (
@@ -141,7 +149,7 @@ const FilePage = () => {
           )}
         </div>
       )}
-      <div className="w-full bg-brand-dark px-6 py-2 ">
+      <div className="w-full bg-brand-dark px-6 py-2 flex justify-between">
         <Breadcrumb className="my-2">
           <BreadcrumbList>
             <BreadcrumbItem>
@@ -168,6 +176,56 @@ const FilePage = () => {
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
+        <div className="*:data-[slot=avatar]:ring-background flex -space-x-2 *:data-[slot=avatar]:ring-2 *:data-[slot=avatar]:grayscale items-center">
+          {others.slice(0, 5).map((item) => (
+            <Tooltip key={item.id}>
+              <TooltipTrigger asChild>
+                <Avatar className="w-7 h-7 cursor-pointer">
+                  <AvatarImage
+                    src={
+                      item.info.avatar === "null" ? item.info.avatar : undefined
+                    }
+                    alt={item.info.email}
+                  />
+                  <AvatarFallback
+                    style={{
+                      backgroundColor: `${stringToColor(item.info.email!)}`,
+                      color: "#fff",
+                    }}
+                  >
+                    {item.info.email.slice(0, 1).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+              </TooltipTrigger>
+              <TooltipContent>
+                <span>{item.info.email}</span>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Avatar className={`w-7 h-7 cursor-pointer`}>
+                <AvatarImage alt={user.email} />
+                <AvatarFallback
+                  className="opacity-100 text-white"
+                  style={{
+                    backgroundColor: `${stringToColor(user.email!)}`,
+                  }}
+                >
+                  {(user.email ?? "User").slice(0, 1).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+            </TooltipTrigger>
+            <TooltipContent>
+              <span>{user.email}</span>
+            </TooltipContent>
+          </Tooltip>
+          {others.length > 4 && (
+            <Avatar>
+              <AvatarFallback>+{others.length - 4}</AvatarFallback>
+            </Avatar>
+          )}
+        </div>
       </div>
       <Header id={path[1]} />
 

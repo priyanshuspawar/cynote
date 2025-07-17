@@ -43,10 +43,6 @@ const client = createBlockNoteAIClient({
   apiKey: "placeholder-api-key",
 });
 
-// const model = createOpenAI({
-//   apiKey: `${process.env.NEXT_PUBLIC_AIS}`,
-// })("gpt-4o");
-
 const model = createOpenAI({
   ...client.getProviderSettings("openai"),
 })("gpt-4o");

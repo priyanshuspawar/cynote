@@ -5,7 +5,7 @@ import { useMyPresence, useOthers } from "@liveblocks/react/suspense";
 import { PointerEvent } from "react";
 
 function LiveCursorRenderer({ children }: { children: React.ReactNode }) {
-  const [myPresence, updateMyPresence] = useMyPresence();
+  const [_, updateMyPresence] = useMyPresence();
   const others = useOthers();
 
   const handlePointerMove = (e: PointerEvent<HTMLDivElement>) => {

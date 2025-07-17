@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@/components/ui/tooltip";
 import RoomProvider from "@/lib/providers/room-provider";
 
 export default function Layout({
@@ -8,5 +9,9 @@ export default function Layout({
   params: { fileId: string };
 }) {
   const fileId = params.fileId.split("folder")[1];
-  return <RoomProvider roomId={fileId}>{children}</RoomProvider>;
+  return (
+    <RoomProvider roomId={fileId}>
+      <TooltipProvider>{children}</TooltipProvider>
+    </RoomProvider>
+  );
 }
