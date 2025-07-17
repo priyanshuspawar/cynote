@@ -139,7 +139,7 @@ const Editor = () => {
     return null;
   }
   return (
-    <div className="max-w-6xl w-full h-full mx-auto flex flex-col flex-grow">
+    <div className="max-w-6xl w-full h-full mx-auto flex flex-col flex-grow scrollbar-none">
       {/* <div className="flex items-center gap-2 justify-end mb-10"> */}
       {/*wip translate document AI */}
       {/* <div className="mx-auto w-full px-[12vw] mt-2">

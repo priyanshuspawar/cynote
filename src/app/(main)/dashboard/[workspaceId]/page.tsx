@@ -1,5 +1,4 @@
 "use client";
-import { Spinner } from "@/components/editor/ui/Spinner";
 import { useAppSelector } from "@/redux/hooks";
 import React, { useMemo, useState } from "react";
 import Image from "next/image";
@@ -25,6 +24,7 @@ import { useGetCollaboratorOfWorkspaceQuery } from "@/redux/services/workspaceAp
 import { Skeleton } from "@/components/ui/skeleton";
 import { CollaboratorsCard } from "@/components/workspace-page/collaborators-card";
 import { Separator } from "@/components/ui/separator";
+import Loader from "@/components/global/Loader";
 const WorkspacePage = () => {
   const { workspaceId }: { workspaceId: string } = useParams();
   const { selectedWorkspace } = useAppSelector(
@@ -111,7 +111,7 @@ const WorkspacePage = () => {
 
   //manage folder
   const [managingFolder, setManagingFolder] = useState<Folder | null>(null);
-  if (!selectedWorkspace) return <Spinner />;
+  if (!selectedWorkspace) return <Loader />;
   return (
     <div className={"w-full h-full"}>
       <div className="h-[35vh] relative flex items-center justify-center">

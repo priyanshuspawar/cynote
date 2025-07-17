@@ -1,6 +1,5 @@
 "use client";
 import Header from "@/components/editor/components/Header";
-import { Spinner } from "@/components/editor/ui/Spinner";
 import Editor from "@/components/liveblock-editor/editor";
 import {
   Breadcrumb,
@@ -34,6 +33,7 @@ import {
 } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { stringToColor } from "@/lib/utils";
+import Loader from "@/components/global/Loader";
 // Dynamically load the collaborative editor (outside component to avoid hook issues)
 
 const FilePage = () => {
@@ -106,11 +106,7 @@ const FilePage = () => {
   }, [state.selectedWorkspace, user]);
   // Handle loading and error states
   if (isLoading) {
-    return (
-      <div className="h-full w-full flex items-center justify-center overflow-hidden">
-        <Spinner />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (error || !data || !folder || !user) {
