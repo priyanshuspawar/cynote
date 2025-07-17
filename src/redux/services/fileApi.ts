@@ -16,6 +16,9 @@ export const fileApi = createApi({
   reducerPath: "fileApi",
   tagTypes: ["File"],
   baseQuery: fakeBaseQuery(),
+  keepUnusedDataFor: 60 * 5,
+  refetchOnFocus: false,
+
   endpoints: (builder) => ({
     // Fetch files in a folder
     getFiles: builder.query<FileWithTag[], string>({

@@ -12,6 +12,7 @@ import { createApi, fakeBaseQuery } from "@reduxjs/toolkit/query/react";
 export const folderApi = createApi({
   reducerPath: "folderApi",
   tagTypes: ["Folder"],
+  keepUnusedDataFor: 60 * 5,
   baseQuery: fakeBaseQuery(),
   endpoints: (builder) => ({
     // Fetch all folders in a workspace

@@ -15,6 +15,7 @@ import { fileApi } from "./fileApi";
 export const tagApi = createApi({
   reducerPath: "tagsApi",
   tagTypes: ["Tag"],
+  keepUnusedDataFor: 60 * 5,
   baseQuery: async () => {
     // Implement your base query logic here
     return { data: [] } as { data: Tag[] }; // Placeholder for actual data fetching logic

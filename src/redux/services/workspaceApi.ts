@@ -24,6 +24,7 @@ export const workspaceApi = createApi({
   reducerPath: "workspaceApi",
   tagTypes: ["Workspace"],
   baseQuery: fakeBaseQuery(),
+  keepUnusedDataFor: 60 * 5,
   endpoints: (builder) => ({
     getAllWorkspacesOfUser: builder.query({
       queryFn: async () => {
