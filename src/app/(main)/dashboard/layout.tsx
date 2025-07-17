@@ -1,17 +1,16 @@
-import React from 'react'
-
+import React from "react";
+import { UserProvider } from "@/lib/providers/colab-user-provider";
 type LayoutProps = {
-    children: React.ReactNode,
-    params:any
-}
+  children: React.ReactNode;
+  params: any;
+};
 
-const MainLayout = ({children,params}:LayoutProps) => {
+const MainLayout = ({ children, params }: LayoutProps) => {
   return (
-    <main className='flex overflow-hidden h-screen'
-    >
-        {children}
+    <main className="flex h-screen">
+      <UserProvider>{children}</UserProvider>
     </main>
-  )
-}
+  );
+};
 
-export default MainLayout
+export default MainLayout;

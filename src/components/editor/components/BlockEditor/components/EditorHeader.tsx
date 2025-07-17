@@ -19,7 +19,6 @@ import {
   getWorkspaceDetails,
 } from "@/lib/supabase/queries";
 import { File, Folder, workspace } from "@/lib/supabase/supabase.types";
-import { Slash } from "lucide-react";
 import HeaderOption from "@/components/editor/HeaderOptions";
 
 export type EditorHeaderProps = {
@@ -39,46 +38,30 @@ export const EditorHeader = ({
   isSidebarOpen,
   toggleSidebar,
 }: EditorHeaderProps) => {
-  const [workspaceDetails, setWorkspaceDetails] = useState<workspace | null>(null);
-  const [folderDetails, setFolderDetails] = useState<Folder | null>(null);
-  const [fileDetails, setFileDetails] = useState<File | null>(null);
-
-  const { characters, words } = useEditorState({
-    editor,
-    selector: (ctx): { characters: number; words: number } => {
-      const { characters, words } = ctx.editor?.storage.characterCount || {
-        characters: () => 0,
-        words: () => 0,
-      };
-      return { characters: characters(), words: words() };
-    },
-    equalityFn: deepEqual,
-  });
-
   const breadcrumbsString = useMemo(() => path, [path]);
 
-  useEffect(() => {
-    const paths = breadcrumbsString.split("/");
-    const fetchData = async () => {
-      try {
-        const { data: WorkspaceData } = await getWorkspaceDetails(paths[0]);
-        const { data: FolderData } = await getFolderDetails(paths[1]);
-        const { data: FilesData } = await getFilesDetails(paths[2]);
+  // useEffect(() => {
+  //   const paths = breadcrumbsString.split("/");
+  //   const fetchData = async () => {
+  //     try {
+  //       const { data: WorkspaceData } = await getWorkspaceDetails(paths[0]);
+  //       const { data: FolderData } = await getFolderDetails(paths[1]);
+  //       const { data: FilesData } = await getFilesDetails(paths[2]);
 
-        setWorkspaceDetails(WorkspaceData?.[0] ?? null);
-        setFolderDetails(FolderData?.[0] ?? null);
-        setFileDetails(FilesData?.[0] ?? null);
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
-    fetchData();
-  }, [breadcrumbsString]);
+  //       setWorkspaceDetails(WorkspaceData?.[0] ?? null);
+  //       setFolderDetails(FolderData?.[0] ?? null);
+  //       setFileDetails(FilesData?.[0] ?? null);
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   };
+  //   fetchData();
+  // }, [breadcrumbsString]);
 
   return (
-
+    <>
       <div className="flex flex-row items-center justify-between flex-none py-2 pl-6 pr-3 border-b">
-        {workspaceDetails && folderDetails && fileDetails && (
+        {/* {workspaceDetails && folderDetails && fileDetails && (
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
@@ -100,9 +83,9 @@ export const EditorHeader = ({
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
-        )}
-        <EditorInfo characters={characters} words={words} collabState={collabState} users={[users[0]]} />
+        )} */}
+        <EditorInfo collabState={collabState} users={[users[0]]} />
       </div>
-    
+    </>
   );
 };

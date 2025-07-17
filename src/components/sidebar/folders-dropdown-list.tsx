@@ -1,56 +1,34 @@
 "use client";
-import { useAppState } from "@/lib/providers/state-provider";
 import { Folder } from "@/lib/supabase/supabase.types";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import TooltipComponent from "../global/tooltip-component";
 import { PlusIcon } from "lucide-react";
 import { useSupabaseUser } from "@/lib/providers/supabase-user-provider";
 import { v4 } from "uuid";
-import { createFolder } from "@/lib/supabase/queries";
 import { useToast } from "../ui/use-toast";
 import { Accordion } from "../ui/accordion";
 import DropDown from "./DropDown";
+import { useAppSelector } from "@/redux/hooks";
+import {
+  useCreateFolderMutation,
+  useGetFoldersQuery,
+} from "@/redux/services/folderApi";
 
 type FoldersDropDownListProps = {
-  workspaceFolders: Folder[];
   workspaceId: string;
 };
 
-const FoldersDropdownList = ({
-  workspaceFolders,
-  workspaceId,
-}: FoldersDropDownListProps) => {
+const FoldersDropdownList = ({ workspaceId }: FoldersDropDownListProps) => {
   //   local state folders
   //   set real time updates
-  const { state, dispatch, folderId } = useAppState();
+  const { folderId } = useAppSelector((state) => state.selectedEntities);
+  const [createFolder, { error: createFolderError }] =
+    useCreateFolderMutation();
   const { toast } = useToast();
-  const [folders, setFolders] = useState(workspaceFolders);
+  const { data: workspaceFolderData, error: FoldersError } =
+    useGetFoldersQuery(workspaceId);
   const { subscription } = useSupabaseUser();
   // effect set initial state server app state
-  useEffect(() => {
-    if (workspaceFolders.length > 0) {
-      dispatch({
-        type: "SET_FOLDERS",
-        payload: {
-          workspaceId,
-          folders: workspaceFolders.map((folder) => ({
-            ...folder,
-            files:
-              state.workspaces
-                .find((workspace) => workspace.id === workspaceId)
-                ?.folders.find((f) => f.id === folder.id)?.files || [],
-          })),
-        },
-      });
-    }
-  }, [workspaceFolders, workspaceId]);
-  // state
-  useEffect(() => {
-    setFolders(
-      state.workspaces.find((workspace) => workspace.id === workspaceId)
-        ?.folders || []
-    );
-  }, [state, workspaceId]);
   // add folder
   const addFolderHandler = async () => {
     // if(folders.length >=3 && !subscription){
@@ -66,15 +44,8 @@ const FoldersDropdownList = ({
       bannerUrl: "",
       createdAt: new Date().toISOString(),
     };
-    dispatch({
-      type: "ADD_FOLDER",
-      payload: {
-        folder: { ...newFolder, files: [] } || [],
-        workspaceId: workspaceId,
-      },
-    });
-    const { data, error } = await createFolder(newFolder);
-    if (error) {
+    await createFolder(newFolder);
+    if (createFolderError) {
       toast({
         variant: "destructive",
         title: "Error",
@@ -87,6 +58,10 @@ const FoldersDropdownList = ({
       });
     }
   };
+
+  if (FoldersError) {
+    return <div></div>;
+  }
   return (
     <>
       <div className="flex sticky z-20 top-0 bg-background w-full h-10 group/title justify-between items-center pr-4 text-Neutrals/neutrals-8">
@@ -114,17 +89,18 @@ const FoldersDropdownList = ({
         defaultValue={[folderId || ""]}
         className="pb-20"
       >
-        {folders
-          .filter((folder) => !folder.inTrash)
-          .map((folder) => (
-            <DropDown
-            key={folder.id}
-            title={folder.title}
-            listType="folder"
-            id={folder.id}
-            iconId={folder.iconId}
-          />
-          ))}
+        {workspaceFolderData &&
+          workspaceFolderData
+            .filter((folder) => !folder.inTrash)
+            .map((folder) => (
+              <DropDown
+                key={folder.id}
+                title={folder.title}
+                listType="folder"
+                id={folder.id}
+                iconId={folder.iconId}
+              />
+            ))}
       </Accordion>
     </>
   );

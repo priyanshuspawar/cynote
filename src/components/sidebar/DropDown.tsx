@@ -1,19 +1,33 @@
 "use client";
-import { useAppState } from "@/lib/providers/state-provider";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import { useRouter } from "next/navigation";
-import React, { use, useMemo, useState } from "react";
-import { AccordionContent, AccordionItem, AccordionTrigger } from "../ui/accordion";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
+import {
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "../ui/accordion";
 import clsx from "clsx";
 import EmojiPicker from "../global/emojiPicker";
-import { createFile, updateFile, updateFolder } from "@/lib/supabase/queries";
-import { useToast } from "../ui/use-toast";
 import TooltipComponent from "../global/tooltip-component";
 import { PlusIcon, Trash } from "lucide-react";
-import { v4 } from "uuid";
-import { File } from "@/lib/supabase/supabase.types";
+import { useUpdateFolderMutation } from "@/redux/services/folderApi";
+import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import {
+  setSelectedFileId,
+  setSelectedFolderId,
+} from "@/redux/features/selectedSlice";
+import {
+  useGetFilesQuery,
+  useUpdateFileMutation,
+  useCreateFileMutation,
+} from "@/redux/services/fileApi";
 import { useSupabaseUser } from "@/lib/providers/supabase-user-provider";
-interface DropDownProps {
+import { File } from "@/lib/supabase/supabase.types";
+import { v4 } from "uuid";
+import debounce from "lodash/debounce"; // Import debounce
+import { useToast } from "../ui/use-toast";
+
+type Props = {
   title: string;
   id: string;
   listType: "folder" | "file";
@@ -21,279 +35,199 @@ interface DropDownProps {
   children?: React.ReactNode;
   disabled?: boolean;
   customIcon?: React.ReactNode;
-}
-const DropDown = ({
-  title,
-  id,
-  listType,
-  iconId,
-  children,
-  disabled,
-  customIcon,
-}: DropDownProps) => {
-  // console.log('id@',id)
-  const supabase = createClientComponentClient();
-  const { toast } = useToast();
-  const {user} = useSupabaseUser()
-  const { state, dispatch, workspaceId, folderId } = useAppState();
-  const [isEditing, setIsEditing] = useState(false);
+};
+
+const DropDown = ({ id, title, listType, iconId }: Props) => {
+  const isFolder = listType === "folder";
   const router = useRouter();
+  const { toast } = useToast();
+  const dispatch = useAppDispatch();
+  const { user } = useSupabaseUser();
+  const [createFile, { error: createFileError }] = useCreateFileMutation();
+  const [updateFolder, { error: updateFolderError }] =
+    useUpdateFolderMutation();
+  const [updateFile, { error: updateFileError }] = useUpdateFileMutation();
+  const { workspaceId, folderId } = useAppSelector(
+    (state) => state.selectedEntities
+  );
 
-  // folder title synched with server data and local data
-  const folderTitle: string | undefined = useMemo(() => {
-    if (listType === "folder") {
-      const stateTitle = state.workspaces
-        .find((workspace) => workspace.id === workspaceId)
-        ?.folders.find((folder) => folder.id === id)?.title;
-      if (title === stateTitle || !stateTitle) return title;
-      return stateTitle;
-    }
-  }, [state, listType, workspaceId, id, title]);
-
-  // file title
-  const fileTitle: string | undefined = useMemo(() => {
-    if (listType === "file") {
-      const fileAndFolderId = id.split("folder");
-      const stateTitle = state.workspaces
-        .find((workspace) => workspace.id === workspaceId)
-        ?.folders.find((folder) => folder.id === fileAndFolderId[1])?.title;
-      if (title === stateTitle || !stateTitle) return title;
-      return stateTitle;
-    }
-  }, [state, listType, workspaceId, id, title]);
-  // navigate the user to different page
-  const navigatePage = (accordionId: string, type: string) => {
-    if (type === "folder") {
-      router.push(`/dashboard/${workspaceId}/${accordionId}`);
-    }
-    if (type === "file") {
-      router.push(`/dashboard/${workspaceId}/${folderId}/${accordionId}`);
-    }
-  };
-  // add a file
-  const addNewFile = async()=>{
-    if(!workspaceId)return;
-    const newFile:File = {
-      folderId:id,
-      data:null,
-      createdAt:new Date().toISOString(),
-      inTrash:null,
-      title:"Untitled",
-      iconId:"📄",
-      id:v4(),
-      workspaceId,
-      bannerUrl: "",
-    }
-    dispatch({
-      type:'ADD_FILE',
-      payload:{
-        file:newFile,folderId:id,workspaceId
-      }
-    })
-    const { data, error } = await createFile(newFile)
-    if(error){
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'Couldn not create a new file',
-      });
-    }
-    else{
-      toast({
-        title: 'Success',
-        description: 'Successfully created a new file',
-      });
-    }
-  }
-  // double click edit the file
+  // api get reqs
+  const folderNFile = id.split("folder");
+  const { data: filesData, error } = useGetFilesQuery(folderNFile[0]);
+  // states
+  const [isEditing, setIsEditing] = useState(false);
+  const [localTitle, setLocalTitle] = useState(title);
+  //double click edit the file
   const handleDoubleClick = () => {
     setIsEditing(true);
   };
-  // blur on save
+
+  //handle blur on save
   const handleBlur = async () => {
     setIsEditing(false);
     const fid = id.split("folder");
     if (fid.length === 1) {
-      if (!folderTitle) return;
-      const {error:FolderTitleChangeError} = await updateFolder(
-        {
-          title,
-        },
-        fid[0]
-      );
-      if(FolderTitleChangeError){
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Couldn't update the folder title",
-        });
-      }
-    }
-    if (fid.length === 2 && fid[1]) {
-      if (!fileTitle) return;
-      const {error:FileTitleChangeError} = await updateFile({
-        title:fileTitle,
-      },fid[1])
-      if(FileTitleChangeError){
-        toast({
-          variant: "destructive",
-          title: "Error",
-          description: "Couldn't update the file title",
-        });
-      }
     }
   };
-  // onchanges
-  const onChangeEmoji = async (selectedEmoji: string) => {
+
+  //onclick
+  const addNewFile = async () => {
+    if (!workspaceId) return;
+    const newFile: File = {
+      folderId: id,
+      data: null,
+      createdAt: new Date().toISOString(),
+      inTrash: null,
+      title: "Untitled",
+      iconId: "📄",
+      id: v4(),
+      workspaceId,
+      bannerUrl: "",
+    };
+    await createFile(newFile);
+    if (createFileError) {
+      toast({ title: "File creation error", variant: "destructive" });
+    }
+  };
+
+  //on changes
+  const onChangeEmoji = async (selectedEmoji: string, id: string) => {
     if (!workspaceId) return;
     if (listType === "folder") {
-      dispatch({
-        type: "UPDATE_FOLDER",
-        payload: {
-          workspaceId,
-          folderId: id,
-          folder: { iconId: selectedEmoji },
-        },
+      await updateFolder({
+        folderId: id,
+        updatedData: { workspaceId, iconId: selectedEmoji },
       });
-      const { data, error } = await updateFolder(
-        {
-          iconId: selectedEmoji,
-        },
-        id
-      );
-      if (error) {
+    }
+    if (listType === "file") {
+      const pathId = id.split("folder");
+      await updateFile({
+        fileId: pathId[1],
+        updatedData: { folderId: pathId[0], iconId: selectedEmoji },
+      });
+      if (updateFileError) {
         toast({
+          title: "File emoji update error",
           variant: "destructive",
-          title: "Error",
-          description: "Couldn't update the emoji for this folder",
-        });
-      } else {
-        toast({
-          title: "Success",
-          description: "Successfully updated the emoji for this folder",
         });
       }
     }
   };
-  const folderTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!workspaceId) return;
-    const fid = id.split("folder");
-    if (fid.length === 1) {
-      dispatch({
-        type: "UPDATE_FOLDER",
-        payload: {
-          folder: { title:e.target.value },
+
+  // Debounce the folder title change
+  const debouncedFolderTitleChange = useCallback(
+    debounce(async (title: string) => {
+      if (!workspaceId) return;
+      const fid = id.split("folder");
+      if (fid.length === 1) {
+        await updateFolder({
           folderId: fid[0],
-          workspaceId,
-        },
-      });
-    }
+          updatedData: { workspaceId, title },
+        });
+      }
+    }, 1000), // 500ms debounce time
+    [workspaceId, id, updateFolder]
+  );
+
+  const debouncedFileTitleChange = useCallback(
+    debounce(async (title: string) => {
+      if (!workspaceId || !folderId) return;
+      const fid = id.split("folder");
+      if (fid.length === 2 && fid[1]) {
+        await updateFile({
+          fileId: fid[1],
+          updatedData: { title, folderId: fid[0] },
+        });
+      }
+    }, 1000),
+    [workspaceId, folderId, id, updateFile]
+  );
+
+  const folderTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setLocalTitle(e.target.value);
+    debouncedFolderTitleChange(e.target.value); // Call debounced function
   };
+
   const fileTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!workspaceId || !folderId) return;
-    const fid = id.split("folder");
-    if (fid.length === 2 && fid[1]) {
-      dispatch({type:'UPDATE_FILE',payload:{
-        file:{title:e.target.value},
-        folderId:folderId,
-        fileId:fid[1],
-        workspaceId}})
-    }
+    setLocalTitle(e.target.value);
+    debouncedFileTitleChange(e.target.value); // Call debounced function
   };
 
   // move to trash
-  const moveToTrash = async ()=>{
-    if(!user?.email || !workspaceId)return;
-    const pathId = id.split('folder');
-    if(listType === 'folder'){
-      dispatch({
-        type:'UPDATE_FOLDER',
-        payload:{
-          folder:{inTrash:`Deleted by ${user.email}`},
-          folderId:pathId[0],
-          workspaceId
-        }
-      })
-      const {data,error} = await updateFolder(
-        {inTrash:`Deleted by ${user.email}`},
-        pathId[0]
-      );
-      if(error){
+  const moveToTrash = async () => {
+    if (!user?.email || !workspaceId) return;
+    const pathId = id.split("folder");
+    if (listType === "folder") {
+      await updateFolder({
+        folderId: pathId[0],
+        updatedData: { inTrash: `Deleted by ${user.email}`, workspaceId },
+      });
+      if (updateFolderError) {
         toast({
+          title: "Error moving folder to trash",
           variant: "destructive",
-          title: "Error",
-          description: "Couldn't move the folder to trash",
-        });
-      }
-      else{
-        toast({
-          title: "Success",
-          description: "Successfully moved the folder to trash",
         });
       }
     }
-    if(listType === 'file'){
-      dispatch({
-        type:"UPDATE_FILE",
-        payload:{
-          file:{inTrash:`Deleted by ${user.email}`},
-          folderId:pathId[0],
-          workspaceId,
-          fileId:pathId[1]
-        }
-      })
-      const { data, error } = await updateFile(
-        { inTrash: `Deleted by ${user?.email}` },
-        pathId[1]
-      );
-      if (error) {
-        toast({
-          title: 'Error',
-          variant: 'destructive',
-          description: 'Could not move the folder to trash',
-        });
-      } else {
-        toast({
-          title: 'Success',
-          description: 'Moved folder to trash',
-        });
+    if (listType === "file") {
+      await updateFile({
+        fileId: pathId[1],
+        updatedData: {
+          inTrash: `Deleted by ${user.email}`,
+          folderId: pathId[0],
+        },
+      });
+      if (updateFileError) {
+        toast({ title: "Error moving file to trash", variant: "destructive" });
       }
-
     }
-  }
+  };
 
-  const isFolder = listType === 'folder';
+  //navigate the user to different page
+  const navigatePage = (accordionId: string, type: string) => {
+    if (type === "folder") {
+      dispatch(setSelectedFolderId(accordionId));
+      router.push(`/dashboard/${workspaceId}/${accordionId}`);
+    }
+    if (type === "file") {
+      dispatch(setSelectedFileId(accordionId));
+      router.push(`/dashboard/${workspaceId}/${folderId}/${accordionId}`);
+    }
+  };
+
+  // styles
   const groupIdentifies = clsx(
-    'dark:text-white whitespace-nowrap flex justify-between items-center w-full relative',
+    "dark:text-white whitespace-nowrap flex justify-between items-center w-full relative",
     {
-      'group/folder': isFolder,
-      'group/file': !isFolder,
+      "group/folder": isFolder,
+      "group/file": !isFolder,
     }
   );
 
   const listStyles = useMemo(
     () =>
-      clsx('relative', {
-        'border-none text-md': isFolder,
-        'border-none ml-6 text-[16px] py-1': !isFolder,
+      clsx("relative", {
+        "border-none text-md": isFolder,
+        "border-none ml-6 text-[16px] py-1": !isFolder,
       }),
     [isFolder]
   );
-
   const hoverStyles = useMemo(
     () =>
       clsx(
-        'h-full hidden rounded-sm absolute right-0 items-center justify-center',
+        "h-full hidden rounded-sm absolute right-0 items-center justify-center",
         {
-          'group-hover/file:block': listType === 'file',
-          'group-hover/folder:block': listType === 'folder',
+          "group-hover/file:block": listType === "file",
+          "group-hover/folder:block": listType === "folder",
         }
       ),
     [isFolder]
   );
-
-
-  
+  useEffect(() => {
+    if (!isEditing) {
+      setLocalTitle(title);
+    }
+  }, [title, isEditing]);
   return (
     <AccordionItem
       value={id}
@@ -311,11 +245,17 @@ const DropDown = ({
         <div className={groupIdentifies}>
           <div className="flex gap-4 items-center justify-center overflow-hidden">
             <div className="relative">
-              <EmojiPicker getValue={onChangeEmoji}>{iconId}</EmojiPicker>
+              <EmojiPicker
+                getValue={(e) => {
+                  onChangeEmoji(e, id);
+                }}
+              >
+                {iconId}
+              </EmojiPicker>
             </div>
             <input
               type="text"
-              value={listType === "folder" ? folderTitle : fileTitle}
+              value={localTitle}
               readOnly={!isEditing}
               onBlur={handleBlur}
               onDoubleClick={handleDoubleClick}
@@ -331,9 +271,7 @@ const DropDown = ({
               )}
             />
           </div>
-          <div
-            className={hoverStyles}
-          >
+          <div className={hoverStyles}>
             <TooltipComponent message="Delete Folder">
               <Trash
                 onClick={moveToTrash}
@@ -341,7 +279,7 @@ const DropDown = ({
                 className="hover:dark:text-white dark:text-Neutrals/neutrals-7 transition-colors"
               />
             </TooltipComponent>
-            {listType === 'folder' && !isEditing && (
+            {listType === "folder" && !isEditing && (
               <TooltipComponent message="Add File">
                 <PlusIcon
                   onClick={addNewFile}
@@ -354,22 +292,22 @@ const DropDown = ({
         </div>
       </AccordionTrigger>
       <AccordionContent>
-        {state.workspaces
-        .find(workspace => workspace.id === workspaceId)?.folders.find(
-          folder => folder.id === id
-        )?.files.filter(file=>!file.inTrash)
-        .map(file=>{
-          const customField = `${id}folder${file.id}`
-          return(
-            <DropDown
-            key={file.id}
-            title={file.title}
-            listType="file"
-            id={customField}
-            iconId={file.iconId}
-            />
-          )
-        })}
+        {filesData &&
+          filesData?.map((file) => {
+            if (file.inTrash) {
+              return;
+            }
+            const customField = `${id}folder${file.id}`;
+            return (
+              <DropDown
+                key={file.id}
+                title={file.title}
+                listType="file"
+                id={customField}
+                iconId={file.iconId}
+              />
+            );
+          })}
       </AccordionContent>
     </AccordionItem>
   );

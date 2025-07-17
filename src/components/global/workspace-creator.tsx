@@ -18,7 +18,6 @@ import { Button } from "../ui/button";
 import { v4 } from "uuid";
 import { useToast } from "../ui/use-toast";
 import { addCollaborators, createWorkspace } from "@/lib/supabase/queries";
-// import {useAppState} from "@/lib/providers/state-provider";
 import CollaboratorSearch from "./CollaboratorSearch";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";

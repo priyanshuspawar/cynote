@@ -1,39 +1,34 @@
-// import {drizzle,PostgresJsDatabase} from "drizzle-orm/postgres-js"
-import {drizzle as drizzlePool} from "drizzle-orm/node-postgres"
-// import postgres from "postgres"
-import {Pool} from "pg"
-import * as dotenv from "dotenv"
-import * as schema from "../../../migrations/schema"
-// import { migrate } from "drizzle-orm/postgres-js/migrator"
-dotenv.config({path:".env"})
+// import { drizzle } from "drizzle-orm/node-postgres";
+// import { Pool } from "pg";
 
+// import * as dotenv from "dotenv";
+// import * as schema from "./schema";
+// dotenv.config({ path: ".env" });
 
-if (!process.env.DATABASE_URL){
-    console.log("🔴 no database URL")
-}
-// const connectionString = process.env.DATABASE_URL as string
-const pool = new Pool({
-    connectionString:`postgresql://postgres.govwklbidoldosqqvriv:${process.env.PW}@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres`
-})
-// const client = postgres(connectionString,{max:1,prepare:false});
-// const drizzleClient = drizzle(client,{schema:schema})
-const drizzleClient = drizzlePool(pool,{schema})
-// declare global {
-//     var database:PostgresJsDatabase<typeof schema>|undefined;
+// if (!process.env.DATABASE_URL) {
+//   console.log("🔴 no database URL");
 // }
+// const pool = new Pool({
+//   connectionString: process.env.DATABASE_URL,
+// });
+// // const client = postgres(process.env.DATABASE_URL!,{
 
-const db = drizzleClient
+// // });
+// const db = drizzle(pool, { schema });
+
+// export default db;
+
+import "dotenv/config";
+import * as schema from "./schema";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+
+const connectionString = process.env.DATABASE_URL!;
+
+// Disable prefetch as it is not supported for "Transaction" pool mode
+export const client = postgres(connectionString, { prepare: false });
+const db = drizzle(client, {
+  schema,
+});
+
 export default db;
-
-// const migrateDb = async()=>{
-//     try {
-//         console.log("🟠 Migrating Client");
-//         await migrate(db,{migrationsFolder:"migrations"});
-//         console.log("🟢 Successfully Migrated")
-//     } catch (error) {
-//         console.log("🔴 Error Migrating Client")
-//     }
-   
-    
-// }
-// migrateDb()

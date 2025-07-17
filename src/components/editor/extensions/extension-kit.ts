@@ -1,7 +1,6 @@
-'use client'
+"use client";
 
-import { HocuspocusProvider } from '@hocuspocus/provider'
-
+import { HocuspocusProvider } from "@hocuspocus/provider";
 
 import {
   BlockquoteFigure,
@@ -46,20 +45,18 @@ import {
   TaskItem,
   TaskList,
   UniqueID,
-} from '.'
+} from ".";
 
-import { ImageUpload } from './ImageUpload'
-import { TableOfContentsNode } from './TableOfContentsNode'
-import { isChangeOrigin } from '@tiptap/extension-collaboration'
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
-import { v4 } from 'uuid'
-import { toast } from 'sonner'
+import { ImageUpload } from "./ImageUpload";
+import { TableOfContentsNode } from "./TableOfContentsNode";
+import { isChangeOrigin } from "@tiptap/extension-collaboration";
 
 interface ExtensionKitProps {
-  provider?: HocuspocusProvider | null
+  provider?: HocuspocusProvider | null;
 }
 
-const supabase =  createClientComponentClient();
+//TODO: fix image upload in file handler extension
+
 export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Document,
   Columns,
@@ -74,8 +71,8 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   HorizontalRule,
   UniqueID.configure({
-    types: ['paragraph', 'heading', 'blockquote', 'codeBlock', 'table'],
-    filterTransaction: transaction => !isChangeOrigin(transaction),
+    types: ["paragraph", "heading", "blockquote", "codeBlock", "table"],
+    filterTransaction: (transaction) => !isChangeOrigin(transaction),
   }),
   StarterKit.configure({
     document: false,
@@ -89,7 +86,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Details.configure({
     persist: true,
     HTMLAttributes: {
-      class: 'details',
+      class: "details",
     },
   }),
   DetailsContent,
@@ -113,63 +110,70 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   ImageBlock,
   FileHandler.configure({
-    allowedMimeTypes: ['image/png', 'image/jpeg', 'image/gif', 'image/webp'],
-    onDrop: (currentEditor, files, pos) => {
-      files.forEach(async file => {
-        try {
-            const {data,error:uploadError} = await supabase.storage.from("document-attachments")
-            .upload(`document-${v4()}`,file,{
-                cacheControl: '3600',
-                upsert: true,
-            })
-            if(!data?.path){
-                throw new Error('Failed to upload image')
-            }
-            const {data:publicUrl} = await supabase.storage.from("document-attachments")
-            .getPublicUrl(data.path)
-            if(
-                uploadError ||!publicUrl
-            ){
-                throw new Error('Failed to fetch public URL')
-            }
-            currentEditor.chain().setImageBlockAt({ pos, src: publicUrl.publicUrl }).focus().run()
-        } catch (errPayload:any) {
-            const error = errPayload?.response?.data?.error || 'Something went wrong'
-            toast.error(error)
-        }
-      })
-    },
-    onPaste: (currentEditor, files) => {
-      files.forEach(async file => {
-        
-        try {
-            const {data,error:uploadError} = await supabase.storage.from("document-attachments")
-            .upload(`document-${v4()}`,file,{
-                cacheControl: '3600',
-                upsert: true,
-            })
-            if(!data?.path){
-                throw new Error('Failed to upload image')
-            }
-            const {data:publicUrl} = await supabase.storage.from("document-attachments")
-            .getPublicUrl(data.path)
-            if(
-                uploadError ||!publicUrl.publicUrl
-            ){
-                throw new Error('Failed to fetch public URL')
-            }
-            return currentEditor
-            .chain()
-            .setImageBlockAt({ pos: currentEditor.state.selection.anchor, src: publicUrl.publicUrl })
-            .focus()
-            .run()
-        } catch (errPayload:any) {
-            const error = errPayload?.response?.data?.error || 'Something went wrong'
-            toast.error(error)
-        }
-
-      })
-    },
+    allowedMimeTypes: ["image/png", "image/jpeg", "image/gif", "image/webp"],
+    // onDrop: (currentEditor, files, pos) => {
+    //   files.forEach(async (file) => {
+    //     try {
+    //       const { data, error: uploadError } = await supabase.storage
+    //         .from("document-attachments")
+    //         .upload(`document-${v4()}`, file, {
+    //           cacheControl: "3600",
+    //           upsert: true,
+    //         });
+    //       if (!data?.path) {
+    //         throw new Error("Failed to upload image");
+    //       }
+    //       const { data: publicUrl } = await supabase.storage
+    //         .from("document-attachments")
+    //         .getPublicUrl(data.path);
+    //       if (uploadError || !publicUrl) {
+    //         throw new Error("Failed to fetch public URL");
+    //       }
+    //       currentEditor
+    //         .chain()
+    //         .setImageBlockAt({ pos, src: publicUrl.publicUrl })
+    //         .focus()
+    //         .run();
+    //     } catch (errPayload: any) {
+    //       const error =
+    //         errPayload?.response?.data?.error || "Something went wrong";
+    //       toast.error(error);
+    //     }
+    //   });
+    // },
+    // onPaste: (currentEditor, files) => {
+    //   files.forEach(async (file) => {
+    //     try {
+    //       const { data, error: uploadError } = await supabase.storage
+    //         .from("document-attachments")
+    //         .upload(`document-${v4()}`, file, {
+    //           cacheControl: "3600",
+    //           upsert: true,
+    //         });
+    //       if (!data?.path) {
+    //         throw new Error("Failed to upload image");
+    //       }
+    //       const { data: publicUrl } = await supabase.storage
+    //         .from("document-attachments")
+    //         .getPublicUrl(data.path);
+    //       if (uploadError || !publicUrl.publicUrl) {
+    //         throw new Error("Failed to fetch public URL");
+    //       }
+    //       return currentEditor
+    //         .chain()
+    //         .setImageBlockAt({
+    //           pos: currentEditor.state.selection.anchor,
+    //           src: publicUrl.publicUrl,
+    //         })
+    //         .focus()
+    //         .run();
+    //     } catch (errPayload: any) {
+    //       const error =
+    //         errPayload?.response?.data?.error || "Something went wrong";
+    //       toast.error(error);
+    //     }
+    //   });
+    // },
   }),
   Emoji.configure({
     enableEmoticons: true,
@@ -177,10 +181,10 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   }),
   TextAlign.extend({
     addKeyboardShortcuts() {
-      return {}
+      return {};
     },
   }).configure({
-    types: ['heading', 'paragraph'],
+    types: ["heading", "paragraph"],
   }),
   Subscript,
   Superscript,
@@ -192,7 +196,7 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   Placeholder.configure({
     includeChildren: true,
     showOnlyCurrent: false,
-    placeholder: () => '',
+    placeholder: () => "",
   }),
   SlashCommand,
   Focus,
@@ -200,8 +204,8 @@ export const ExtensionKit = ({ provider }: ExtensionKitProps) => [
   BlockquoteFigure,
   Dropcursor.configure({
     width: 2,
-    class: 'ProseMirror-dropcursor border-black',
+    class: "ProseMirror-dropcursor border-black",
   }),
-]
+];
 
-export default ExtensionKit
+export default ExtensionKit;

@@ -1,5 +1,4 @@
 "use client";
-import { useAppState } from "@/lib/providers/state-provider";
 import { workspace } from "@/lib/supabase/supabase.types";
 import React, { useEffect, useState } from "react";
 import SelectedWorkspace from "./selectedWorkspace";
@@ -19,32 +18,24 @@ const WorkspaceDropdown = ({
   sharedWorkspaces,
   defaultValue,
 }: WorkspaceDropDownProps) => {
-  const { dispatch, state } = useAppState();
   const [selectedOption, setSelectedOption] = useState(defaultValue);
   const [isOpen, setIsOpen] = useState(false);
-  useEffect(() => {
-    if (!state.workspaces.length) {
-      dispatch({
-        type: "SET_WORKSPACES",
-        payload: {
-          workspaces: [
-            ...privateWorkspaces,
-            ...sharedWorkspaces,
-            ...colaboratingWorkspaces,
-          ].map((workspace) => ({ ...workspace, folders: [] })),
-        },
-      });
-    }
-  }, [privateWorkspaces, colaboratingWorkspaces, sharedWorkspaces]);
+
   const handleSelect = (option: workspace) => {
     setSelectedOption(option);
     setIsOpen(false);
   };
-
-  useEffect(()=>{
-    const findSelectedWorkspace = state.workspaces.find(workspace => workspace.id === defaultValue?.id)
-    if(findSelectedWorkspace)setSelectedOption(findSelectedWorkspace)
-  },[state,defaultValue])
+  const workspaces = [
+    ...privateWorkspaces,
+    ...colaboratingWorkspaces,
+    ...sharedWorkspaces,
+  ];
+  useEffect(() => {
+    const findSelectedWorkspace = workspaces.find(
+      (workspace) => workspace.id === defaultValue?.id
+    );
+    if (findSelectedWorkspace) setSelectedOption(findSelectedWorkspace);
+  }, [defaultValue]);
 
   return (
     <div
@@ -73,7 +64,8 @@ const WorkspaceDropdown = ({
         bg-black/10
         backdrop-blur-lg
         group
-        overflow-scroll
+        overflow-x-hidden
+        overflow-y-auto
         border-[1px]
         border-muted
     "
@@ -126,23 +118,23 @@ const WorkspaceDropdown = ({
               description="Workspaces give you the power to collaborate with others. You can change your workspace privacy settings after creating the workspace too."
             >
               <div
-                className="flex 
-            transition-all 
+                className="flex
+            transition-all
             hover:bg-muted
-            justify-center 
-            items-center 
-            gap-2 
-            p-2 
+            justify-center
+            items-center
+            gap-2
+            p-2
             w-full"
               >
                 <article
-                  className="text-slate-500 
+                  className="text-slate-500
               rounded-full
-               bg-slate-800 
-               w-4 
-               h-4 
-               flex 
-               items-center 
+               bg-slate-800
+               w-4
+               h-4
+               flex
+               items-center
                justify-center"
                 >
                   +

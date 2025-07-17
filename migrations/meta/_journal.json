@@ -1,26 +1,40 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1723457279398,
-      "tag": "0000_mean_silver_fox",
+      "version": "7",
+      "when": 1752152944923,
+      "tag": "0000_right_stark_industries",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "5",
-      "when": 1723875692664,
-      "tag": "0001_jazzy_captain_america",
+      "version": "7",
+      "when": 1752447408656,
+      "tag": "0001_naive_warbird",
       "breakpoints": true
     },
     {
       "idx": 2,
-      "version": "5",
-      "when": 1724079136405,
-      "tag": "0002_glorious_maddog",
+      "version": "7",
+      "when": 1752449206823,
+      "tag": "0002_late_madame_masque",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1752616883631,
+      "tag": "0003_absent_whistler",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1752619954779,
+      "tag": "0004_secret_arachne",
       "breakpoints": true
     }
   ]

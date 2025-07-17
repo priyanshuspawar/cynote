@@ -1,97 +1,120 @@
-import {
-  getCollaboratingWorkspaces,
-  getFolders,
-  getPrivateWorkspaces,
-  getSharedWorkspaces,
-  getUserSubscriptionStatus,
-} from "@/lib/supabase/queries";
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import React from "react";
+"use client";
+import React, { useEffect, useMemo } from "react";
 import { twMerge } from "tailwind-merge";
 import WorkspaceDropdown from "./workspaceDropdown";
+import { Skeleton } from "@/components/ui/skeleton";
 import PlanUsage from "./plan-usage";
 import NativeNavigation from "./native-navigation";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "./folders-dropdown-list";
+import {
+  useGetCollaboratingWorkspacesQuery,
+  useGetPrivateWorkspacesQuery,
+  useGetSharedWorkspacesQuery,
+} from "@/redux/services/workspaceApi";
+import {
+  setSelectedWorkspace,
+  setSelectedWorkspaceId,
+} from "@/redux/features/selectedSlice";
+import { useAppDispatch } from "@/redux/hooks";
 
 type SideBarProps = {
   params: { workspaceId: string };
   className?: string;
 };
 
-const SideBar = async ({ params, className }: SideBarProps) => {
-  const supabase = createServerComponentClient({ cookies });
-  // user
+const SideBar = ({ params, className }: SideBarProps) => {
+  const dispatch = useAppDispatch();
+
+  // Set the workspaceId once when the component mounts
+  useEffect(() => {
+    dispatch(setSelectedWorkspaceId(params.workspaceId));
+  }, [params.workspaceId, dispatch]);
+
+  // Fetch workspaces
+  const { data: privateWorkspaces, isLoading: privateWorkspacesLoading } =
+    useGetPrivateWorkspacesQuery(null);
   const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return;
-  // subscription
-  const { data: subscriptionData, error: subscriptionError } =
-    await getUserSubscriptionStatus(user.id);
-  // folders
-  const { data: workspaceFolderData, error: FoldersError } = await getFolders(
-    params.workspaceId
-  );
-  // error
-  if (subscriptionError || FoldersError) {
-    redirect("/dashboard");
+    data: collaboratingWorkspaces,
+    isLoading: collaboratingWorkspacesLoading,
+  } = useGetCollaboratingWorkspacesQuery(null);
+  const { data: sharedWorkspaces, isLoading: sharedWorkspacesLoading } =
+    useGetSharedWorkspacesQuery(null);
+
+  // Memoize the combined workspaces to avoid re-calculation
+  const allWorkspaces = useMemo(() => {
+    return [
+      ...(privateWorkspaces || []),
+      ...(collaboratingWorkspaces || []),
+      ...(sharedWorkspaces || []),
+    ];
+  }, [privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces]);
+
+  // Find the selected workspace based on params.workspaceId
+  const selectedWorkspace = useMemo(() => {
+    return allWorkspaces.find(
+      (workspace) => workspace.id === params.workspaceId
+    );
+  }, [allWorkspaces, params.workspaceId]);
+
+  // Dispatch the selectedWorkspace only if it changes
+  useEffect(() => {
+    if (selectedWorkspace) {
+      dispatch(setSelectedWorkspace(selectedWorkspace));
+    }
+  }, [selectedWorkspace, dispatch]);
+
+  if (
+    privateWorkspacesLoading ||
+    collaboratingWorkspacesLoading ||
+    sharedWorkspacesLoading
+  ) {
+    return (
+      <aside
+        className={twMerge(
+          "hidden h-screen sm:flex sm:flex-col w-[280px] justify-between shrink-0 p-4 md:gap-4 overflow-hidden",
+          className
+        )}
+      >
+        <div>
+          <div className="h-[10vh] w-full">
+            <Skeleton className="h-full w-full" />
+          </div>
+          <div className="my-4 h-[50vh] grid grid-cols-1 grid-rows-8 gap-2">
+            <Skeleton />
+            <Skeleton />
+            <Skeleton />
+          </div>
+        </div>
+        <div>
+          <Skeleton className="h-16" />
+        </div>
+      </aside>
+    );
   }
 
+  if (!privateWorkspaces || !sharedWorkspaces || !collaboratingWorkspaces) {
+    return <div>Error fetching data</div>;
+  }
 
-  const [privateWorkspaces, collaboratingWorkspaces, sharedWorkspaces] =
-    await Promise.all([
-      getPrivateWorkspaces(user.id),
-      getCollaboratingWorkspaces(user.id),
-      getSharedWorkspaces(user.id),
-    ]);
-
-   
   return (
     <aside
       className={twMerge(
-        "hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between",
+        "hidden sm:flex sm:flex-col w-[280px] shrink-0 p-4 md:gap-4 !justify-between ",
         className
       )}
     >
       <div>
         <WorkspaceDropdown
-          privateWorkspaces={privateWorkspaces}
-          sharedWorkspaces={sharedWorkspaces}
-          colaboratingWorkspaces={collaboratingWorkspaces}
-          defaultValue={[
-            ...privateWorkspaces,
-            ...collaboratingWorkspaces,
-            ...sharedWorkspaces,
-          ].find((workspace) => workspace.id === params.workspaceId)}
+          privateWorkspaces={privateWorkspaces || []}
+          sharedWorkspaces={collaboratingWorkspaces || []}
+          colaboratingWorkspaces={sharedWorkspaces || []}
+          defaultValue={selectedWorkspace}
         />
-        <PlanUsage
-          foldersLength={workspaceFolderData?.length || 0}
-          subscription={subscriptionData}
-        />
-        <NativeNavigation myWorkspaceId={params.workspaceId}/>
-        <ScrollArea
-          className="overflow-y-scroll relative
-          h-[450px]
-        "
-        >
-          <div
-            className="pointer-events-none 
-          w-full 
-          absolute 
-          bottom-0 
-          h-20 
-          bg-gradient-to-t 
-          from-background 
-          to-transparent 
-          z-40"
-          />
-          <FoldersDropdownList
-            workspaceFolders={workspaceFolderData || []}
-            workspaceId={params.workspaceId}
-          />
+        <NativeNavigation myWorkspaceId={params.workspaceId} />
+        <ScrollArea className="overflow-y-hidden relative h-[450px]">
+          <div className="pointer-events-none w-full absolute bottom-0 h-20 bg-gradient-to-t from-background to-transparent z-40" />
+          <FoldersDropdownList workspaceId={params.workspaceId} />
         </ScrollArea>
       </div>
     </aside>

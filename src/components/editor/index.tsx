@@ -2,24 +2,23 @@
 
 import { HocuspocusProvider, TiptapCollabProvider } from "@hocuspocus/provider";
 import "iframe-resizer/js/iframeResizer.contentWindow";
-import {
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useState,
-} from "react";
-
+import { useEffect, useLayoutEffect, useMemo, useState } from "react";
 import * as Y from "yjs";
 import { BlockEditor } from "./components/BlockEditor";
 import { usePathname } from "next/navigation";
 
-export default function CollaborativeEditor({ room,folderId }: { room: string,folderId: string}) {
+export default function CollaborativeEditor({
+  room,
+  folderId,
+}: {
+  room: string;
+  folderId: string;
+}) {
   const [provider, setProvider] = useState<HocuspocusProvider | null>();
   const [collabToken, setCollabToken] = useState<string | null | undefined>();
-  const path = usePathname()
-  
-  // fetching info from db
+  const path = usePathname();
 
+  // fetching info from db
 
   useEffect(() => {
     const dataFetch = async () => {
@@ -60,7 +59,7 @@ export default function CollaborativeEditor({ room,folderId }: { room: string,fo
         //   document: ydoc,
         // })
         new HocuspocusProvider({
-          url: 'ws://127.0.0.1:8080',
+          url: "ws://127.0.0.1:8080",
           name: `doc-${room}`,
           token: collabToken,
           document: ydoc,
@@ -68,10 +67,10 @@ export default function CollaborativeEditor({ room,folderId }: { room: string,fo
       );
     }
   }, [setProvider, collabToken, ydoc, room]);
-  if ((!provider) || collabToken === undefined) return
+  if (!provider || collabToken === undefined) return;
   return (
     <>
-      <BlockEditor hasCollab ydoc={ydoc} provider={provider} path={path}/>
+      <BlockEditor room={room} hasCollab ydoc={ydoc} provider={provider} />
     </>
   );
 }

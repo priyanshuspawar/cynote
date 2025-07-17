@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
-import { Form, FormDescription, FormField,FormMessage,FormItem,FormControl } from "@/components/ui/form";
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "../../../../public/cypresslogo.svg";
@@ -14,118 +13,102 @@ import { Button } from "@/components/ui/button";
 import Loader from "@/components/global/Loader";
 import { actionLoginUser } from "@/lib/server-actions/authActions";
 
+type LoginFormData = z.infer<typeof LoginFormSchema>;
+
 const LoginPage = () => {
   const router = useRouter();
   const [submitError, setSubmitError] = useState("");
 
-  const form = useForm<z.infer<typeof LoginFormSchema>>({
-    mode: "onChange",
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<LoginFormData>({
     resolver: zodResolver(LoginFormSchema),
     defaultValues: { email: "", password: "" },
   });
 
-  const isLoading = form.formState.isSubmitting;
+  const onSubmit: SubmitHandler<LoginFormData> = async (formData) => {
+    console.log("Login form data:", formData); // This should now work
 
-  const onSubmit: SubmitHandler<z.infer<typeof LoginFormSchema>> = async (
-    formData
-  ) => {
-    const { error } = await actionLoginUser(formData);
-    if (error) {
-      form.reset();
-      setSubmitError(error.message);
+    try {
+      const { error } = await actionLoginUser(formData);
+      if (error) {
+        reset();
+        setSubmitError(error.message);
+        return;
+      }
+      router.replace("/dashboard");
+    } catch (err) {
+      console.error("Login error:", err);
+      setSubmitError("An unexpected error occurred");
     }
-    router.replace('/dashboard');
   };
 
   return (
-    <Form {...form}>
+    <div className="w-full sm:justify-center sm:w-[400px] space-y-6 flex flex-col">
+      <Link href="/" className="w-full flex justify-left items-center">
+        <Image src={Logo} alt="cypress Logo" width={50} height={50} />
+        <span className="font-semibold dark:text-white text-4xl first-letter:ml-2">
+          cypress.
+        </span>
+      </Link>
+
+      <p className="text-foreground/60">
+        An all-In-One Collaboration and Productivity Platform
+      </p>
+
       <form
+        onSubmit={handleSubmit(onSubmit)}
         onChange={() => {
           if (submitError) setSubmitError("");
         }}
-        onSubmit={form.handleSubmit(onSubmit)}
-        className="w-full sm:justify-center sm:w-[400px] space-y-6 flex flex-col"
+        className="space-y-6"
       >
-        <Link
-          href="/"
-          className="
-          w-full
-          flex
-          justify-left
-          items-center"
-        >
-          <Image src={Logo} alt="cypress Logo" width={50} height={50} />
-          <span
-            className="font-semibold
-          dark:text-white text-4xl first-letter:ml-2"
-          >
-            cypress.
-          </span>
-        </Link>
-
-        <FormDescription
-          className="
-        text-foreground/60"
-        >
-          An all-In-One Collaboration and Productivity Platform
-        </FormDescription>
-
-
-        {/* FORM*/}
-        <FormField
-          disabled={isLoading}
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        <div className="space-y-2">
+          <Input
+            type="email"
+            placeholder="Email"
+            {...register("email")}
+            disabled={isSubmitting}
+          />
+          {errors.email && (
+            <p className="text-sm text-red-500">{errors.email.message}</p>
           )}
-        />
-        <FormField
-          disabled={isLoading}
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormControl>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
+        </div>
+
+        <div className="space-y-2">
+          <Input
+            type="password"
+            placeholder="Password"
+            {...register("password")}
+            disabled={isSubmitting}
+          />
+          {errors.password && (
+            <p className="text-sm text-red-500">{errors.password.message}</p>
           )}
-        />
-        {submitError && <FormMessage>{submitError}</FormMessage>}
+        </div>
+
+        {submitError && <p className="text-sm text-red-500">{submitError}</p>}
+
         <Button
           type="submit"
           className="w-full p-6"
           size="lg"
-          disabled={isLoading}
+          disabled={isSubmitting}
         >
-          {!isLoading ? 'Login' : <Loader />}
+          {!isSubmitting ? "Login" : <Loader />}
         </Button>
-        <span className="self-container">
-          Dont have an account?{' '}
-          <Link
-            href="/signup"
-            className="text-primary"
-          >
-            Sign Up
-          </Link>
-        </span>
       </form>
-    </Form>
+
+      <span className="self-container text-center">
+        Don&#39;t have an account?{" "}
+        <Link href="/signup" className="text-primary">
+          Sign Up
+        </Link>
+      </span>
+    </div>
   );
 };
 

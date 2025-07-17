@@ -4,28 +4,28 @@
 
 @import"editor.css";
 
-:root {
+/* :root {
   --scroll-size: 8px;
   --scroll-radius: 10px;
   --scroll-track: #02001420;
   --scroll-thumb-color: #2e2b3f;
-}
+} */
 /* Scrollbar Track */
-::-webkit-scrollbar-track {
+/* ::-webkit-scrollbar-track {
   background-color: var(--scroll-track);
   border-radius: var(--scroll-radius);
-}
+} */
 
 /* Scrollbar */
-::-webkit-scrollbar {
+/* ::-webkit-scrollbar {
   width: var(--scroll-size);
-}
+} */
 
 /* Scrollbar Thumb */
-::-webkit-scrollbar-thumb {
+/* ::-webkit-scrollbar-thumb {
   background-color: var(--scroll-thumb-color);
   border-radius: var(--scroll-radius);
-}
+} */
 
 /* *::-webkit-scrollbar {
   display: none !important;
@@ -143,3 +143,9 @@ body {
   background-image: radial-gradient(rgb(25, 25, 25) 1px, transparent 1px);
   background-size: 30px 30px;
 } */
+
+.bn-shadcn .bn-editor,
+.bn-shadcn .bn-side-menu {
+  background-color: var(--card) !important;
+  font-family: Inter, SF Pro Display, -apple-system, BlinkMacSystemFont, Open Sans, Segoe UI, Roboto, Oxygen, Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif !important;
+}
