@@ -4,7 +4,7 @@
 // import { Subscription } from "@/lib/supabase/supabase.types";
 // import React, { useEffect, useState } from "react";
 // import { Progress } from "../ui/progress";
-// import SainoDiamondIcon from "../icons/sainoDiamondIcon";
+// import CynoteDiamondIcon from "../icons/cynoteDiamondIcon";
 
 // type PlanUsageProps = {
 //   foldersLength: number;
@@ -36,7 +36,7 @@
 //       "
 //       >
 //         <div className="h-4 w-4">
-//           <SainoDiamondIcon />
+//           <CynoteDiamondIcon />
 //         </div>
 //         <div
 //           className="flex

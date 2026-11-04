@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
-interface SainoDiamondIconProps {}
-const SainoDiamondIcon: FC<SainoDiamondIconProps> = () => {
+interface CynoteDiamondIconProps {}
+const CynoteDiamondIcon: FC<CynoteDiamondIconProps> = () => {
   return (
     <svg
       viewBox="0 0 24 24"
@@ -20,4 +20,4 @@ const SainoDiamondIcon: FC<SainoDiamondIconProps> = () => {
   );
 };
 
-export default SainoDiamondIcon;
+export default CynoteDiamondIcon;

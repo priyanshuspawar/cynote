@@ -10,7 +10,7 @@ import React, { Suspense, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import Logo from "../../../../public/saino-logo.svg";
+import Logo from "../../../../public/cynote-logo.svg";
 import Loader from "@/components/global/Loader";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { MailCheck } from "lucide-react";
@@ -89,9 +89,9 @@ const Signup = () => {
   return (
     <div className="w-full sm:justify-center sm:w-[400px] space-y-6 flex flex-col">
       <Link href="/" className="w-full flex justify-left items-center">
-        <Image src={Logo} alt="Saino logo" width={50} height={50} />
+        <Image src={Logo} alt="Cynote logo" width={50} height={50} />
         <span className="font-semibold dark:text-white text-4xl first-letter:ml-2">
-          Saino.
+          Cynote.
         </span>
       </Link>
 

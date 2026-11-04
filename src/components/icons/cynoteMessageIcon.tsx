@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
-interface SainoMessageIconProps {}
-const SainoMessageIcon: FC<SainoMessageIconProps> = () => {
+interface CynoteMessageIconProps {}
+const CynoteMessageIcon: FC<CynoteMessageIconProps> = () => {
   return (
     <svg
       width="24"
@@ -26,4 +26,4 @@ const SainoMessageIcon: FC<SainoMessageIconProps> = () => {
   );
 };
 
-export default SainoMessageIcon;
+export default CynoteMessageIcon;

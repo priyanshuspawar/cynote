@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
-interface SainoTemplateIconProps {}
-const SainoTemplateIcon: FC<SainoTemplateIconProps> = () => {
+interface CynoteTemplateIconProps {}
+const CynoteTemplateIcon: FC<CynoteTemplateIconProps> = () => {
   return (
     <svg
       width="24"
@@ -26,4 +26,4 @@ const SainoTemplateIcon: FC<SainoTemplateIconProps> = () => {
   );
 };
 
-export default SainoTemplateIcon;
+export default CynoteTemplateIcon;

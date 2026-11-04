@@ -17,7 +17,7 @@ export const USERS = [
   {
     name: "Alice",
     message:
-      "Saino keeps our team notes in one place. Real-time editing means we never email docs back and forth anymore.",
+      "Cynote keeps our team notes in one place. Real-time editing means we never email docs back and forth anymore.",
   },
   {
     name: "Bob",
@@ -32,7 +32,7 @@ export const USERS = [
   {
     name: "David",
     message:
-      "I was skeptical at first, but Saino's live cursors make remote brainstorming feel like being in the same room.",
+      "I was skeptical at first, but Cynote's live cursors make remote brainstorming feel like being in the same room.",
   },
   {
     name: "Ella",
@@ -42,22 +42,22 @@ export const USERS = [
   {
     name: "Frank",
     message:
-      "Fix spelling and simplify are my favourite AI actions. Saino cleans up my notes before I share them.",
+      "Fix spelling and simplify are my favourite AI actions. Cynote cleans up my notes before I share them.",
   },
   {
     name: "Grace",
     message:
-      "We plan every sprint in Saino now. Comments and edits show up instantly for the whole team.",
+      "We plan every sprint in Cynote now. Comments and edits show up instantly for the whole team.",
   },
   {
     name: "Hank",
     message:
-      "Saino's clean interface made it easy for our non-technical teammates to start writing on day one.",
+      "Cynote's clean interface made it easy for our non-technical teammates to start writing on day one.",
   },
   {
     name: "Ivy",
     message:
-      "Collaboration improved the moment we moved our docs to Saino. No more conflicting versions.",
+      "Collaboration improved the moment we moved our docs to Cynote. No more conflicting versions.",
   },
   {
     name: "Jack",
@@ -67,7 +67,7 @@ export const USERS = [
   {
     name: "Katherine",
     message:
-      "Saino is a lifesaver for our cross-functional team. Everyone works from the same living document.",
+      "Cynote is a lifesaver for our cross-functional team. Everyone works from the same living document.",
   },
   {
     name: "Liam",
@@ -77,7 +77,7 @@ export const USERS = [
   {
     name: "Mia",
     message:
-      "A fast, focused writing space with AI built in. Saino is now part of my daily workflow.",
+      "A fast, focused writing space with AI built in. Cynote is now part of my daily workflow.",
   },
   {
     name: "Nathan",
@@ -92,17 +92,17 @@ export const USERS = [
   {
     name: "Paul",
     message:
-      "Saino turned our scattered meeting notes into an organised, searchable workspace.",
+      "Cynote turned our scattered meeting notes into an organised, searchable workspace.",
   },
   {
     name: "Quinn",
     message:
-      "I love how quickly the editor loads. Saino feels lightweight but powerful.",
+      "I love how quickly the editor loads. Cynote feels lightweight but powerful.",
   },
   {
     name: "Rachel",
     message:
-      "Saino brought our writers and engineers onto the same page, literally.",
+      "Cynote brought our writers and engineers onto the same page, literally.",
   },
   {
     name: "Sam",

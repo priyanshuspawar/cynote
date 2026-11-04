@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
-interface SainoMarketPlaceIconProps {}
-const SainoMarketPlaceIcon: FC<SainoMarketPlaceIconProps> = () => {
+interface CynoteMarketPlaceIconProps {}
+const CynoteMarketPlaceIcon: FC<CynoteMarketPlaceIconProps> = () => {
   return (
     <svg
       width="24"
@@ -24,4 +24,4 @@ const SainoMarketPlaceIcon: FC<SainoMarketPlaceIconProps> = () => {
   );
 };
 
-export default SainoMarketPlaceIcon;
+export default CynoteMarketPlaceIcon;

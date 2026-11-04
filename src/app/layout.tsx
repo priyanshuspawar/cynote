@@ -20,7 +20,7 @@ import SupabaseUserProvider from "@/lib/providers/supabase-user-provider";
 const dmSans = DM_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Saino",
+  title: "Cynote",
   description: "Colaborative realtime workflow management app",
 };
 

@@ -1,9 +1,9 @@
 import Link from 'next/link';
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
-import SainoHomeIcon from '../icons/sainoHomeIcon';
-import SainoSettingsIcon from '../icons/sainoSettingsIcon';
-import SainoTrashIcon from '../icons/sainoTrashIcon';
+import CynoteHomeIcon from '../icons/cynoteHomeIcon';
+import CynoteSettingsIcon from '../icons/cynoteSettingsIcon';
+import CynoteTrashIcon from '../icons/cynoteTrashIcon';
 import Settings from '../settings/Settings';
 // import Settings from '../settings/settings';
 import Trash from '../trash/trash';
@@ -30,7 +30,7 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
           "
             href={`/dashboard/${myWorkspaceId}`}
           >
-            <SainoHomeIcon />
+            <CynoteHomeIcon />
             <span>My Workspace</span>
           </Link>
         </li>
@@ -45,7 +45,7 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
             cursor-pointer
           "
           >
-            <SainoSettingsIcon />
+            <CynoteSettingsIcon />
             <span>Settings</span>
           </li>
         </Settings>
@@ -60,7 +60,7 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
             cursor-pointer
           "
           >
-            <SainoTrashIcon />
+            <CynoteTrashIcon />
             <span>Trash</span>
           </li>
         </Trash>
