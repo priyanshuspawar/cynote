@@ -15,7 +15,7 @@ const SelectedWorkspace: React.FC<SelectedWorkspaceProps> = ({
   onClick,
 }) => {
   const supabase = createClient();
-  const [workspaceLogo, setWorkspaceLogo] = useState("/saino-logo.svg");
+  const [workspaceLogo, setWorkspaceLogo] = useState("/cynote-logo.svg");
   useEffect(() => {
     if (workspace.logo) {
       const path = supabase.storage

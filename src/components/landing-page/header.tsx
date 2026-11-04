@@ -2,7 +2,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import React, { useState } from "react";
-import Logo from "../../../public/saino-logo.svg";
+import Logo from "../../../public/cynote-logo.svg";
 
 import {
   NavigationMenu,
@@ -30,8 +30,8 @@ const Header = () => {
   return (
     <header className="p-4 flex justify-center items-center">
       <Link href={"/"} className="w-full flex gap-2 justify-start items-center">
-        <Image src={Logo} alt="Saino Logo" width={25} height={25} />
-        <span className="font-semibold dark:text-white">Saino.</span>
+        <Image src={Logo} alt="Cynote Logo" width={25} height={25} />
+        <span className="font-semibold dark:text-white">Cynote.</span>
       </Link>
       <NavigationMenu className="hidden md:block">
         <NavigationMenuList className="gap-6">
@@ -83,7 +83,7 @@ const Header = () => {
                   Guides for workspaces, collaboration and AI editing.
                 </ListItem>
                 <ListItem title="Changelog (coming soon)">
-                  What&apos;s new in Saino.
+                  What&apos;s new in Cynote.
                 </ListItem>
               </ul>
             </NavigationMenuContent>

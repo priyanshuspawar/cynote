@@ -53,7 +53,7 @@ const HomePage = () => {
               bg-background
             "
             >
-              Get Saino Free
+              Get Cynote Free
             </Button>
           </Link>
         </div>

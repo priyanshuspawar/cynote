@@ -47,7 +47,7 @@ import { Button, buttonVariants } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Alert, AlertDescription } from "../ui/alert";
-import SainoProfileIcon from "../icons/sainoProfileIcon";
+import CynoteProfileIcon from "../icons/cynoteProfileIcon";
 import LogoutButton from "../global/logout-button";
 import Link from "next/link";
 import { trialDaysLeft } from "@/lib/constants";
@@ -389,7 +389,7 @@ const SettingsForm = () => {
           <Avatar>
             <AvatarImage src={""} />
             <AvatarFallback>
-              <SainoProfileIcon />
+              <CynoteProfileIcon />
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col ml-6">
@@ -425,7 +425,7 @@ const SettingsForm = () => {
         <p className="text-muted-foreground">
           {daysLeft > 0
             ? `Pro trial: ${daysLeft} day${daysLeft === 1 ? "" : "s"} left.`
-            : "Pro features stay free while Saino is in beta."}{" "}
+            : "Pro features stay free while Cynote is in beta."}{" "}
           AI features have a small daily limit.
         </p>
         <Link

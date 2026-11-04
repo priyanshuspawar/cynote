@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 
-interface SainoHomeIconProps {}
-const SainoHomeIcon: FC<SainoHomeIconProps> = () => {
+interface CynoteHomeIconProps {}
+const CynoteHomeIcon: FC<CynoteHomeIconProps> = () => {
   return (
     <svg
       width="24"
@@ -24,4 +24,4 @@ const SainoHomeIcon: FC<SainoHomeIconProps> = () => {
   );
 };
 
-export default SainoHomeIcon;
+export default CynoteHomeIcon;

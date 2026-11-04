@@ -1,4 +1,4 @@
-# Saino
+# Cynote
 
 A real-time, collaborative note-taking workspace with a built-in AI writing assistant. It's a Notion-style app built as a portfolio project.
 
@@ -21,7 +21,7 @@ A real-time, collaborative note-taking workspace with a built-in AI writing assi
 | State | Redux Toolkit + RTK Query, with Next.js server actions as the data layer |
 | Database & auth | Supabase (Postgres, Auth, Storage), Drizzle ORM |
 | Editor & realtime | BlockNote, Yjs, Liveblocks |
-| AI | BlockNote AI (`@blocknote/xl-ai`) → the Saino AI worker (Cloudflare Workers + Azure OpenAI) |
+| AI | BlockNote AI (`@blocknote/xl-ai`) → the Cynote AI worker (Cloudflare Workers + Azure OpenAI) |
 
 ## Getting started
 
@@ -33,22 +33,11 @@ npm install
 
 ### 2. Environment
 
-Create a `.env` file in the project root:
-
 ```bash
-NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=<supabase anon key>
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-
-# Supabase → Connect → Transaction pooler (port 6543)
-DATABASE_URL=postgresql://postgres.<project-ref>:<password>@<region>.pooler.supabase.com:6543/postgres
-
-# Saino AI worker (local: http://127.0.0.1:8787)
-NEXT_PUBLIC_EDITOR_GPT_URL=https://saino-ai-worker.<your-subdomain>.workers.dev
-
-NEXT_PUBLIC_LIVEBLOCKS_PUBLIC_KEY=<liveblocks public key>
-LIVEBLOCKS_PRIVATE_KEY=<liveblocks secret key>
+cp .env.example .env
 ```
+
+Fill in the values. [`.env.example`](.env.example) explains where each one comes from. On Vercel, add the same variables under Project → Settings → Environment Variables. The two `NEXT_PUBLIC_SUPABASE_*` values must be set before the build runs.
 
 ### 3. Database
 
@@ -63,7 +52,7 @@ On a fresh Supabase project:
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). To use the AI features locally, also run the Saino AI worker (`npm run dev` in its repo).
+Open [http://localhost:3000](http://localhost:3000). To use the AI features locally, also run the Cynote AI worker (`npm run dev` in its repo).
 
 ## Security notes
 
