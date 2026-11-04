@@ -30,7 +30,8 @@ export async function actionSignUpUser({
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}api/auth/callback`,
+      // works whether NEXT_PUBLIC_SITE_URL has a trailing slash or not
+      emailRedirectTo: new URL("/api/auth/callback", process.env.NEXT_PUBLIC_SITE_URL).toString(),
     },
   });
   // Return only serializable data
