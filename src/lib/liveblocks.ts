@@ -1,11 +1,11 @@
 import { Liveblocks } from "@liveblocks/node";
-const key = process.env.LIVEBLOCKS_PRIVATE_KEY;
 
-if (!key) {
-  throw new Error("LIVEBLOCKS_PRIVATE_KEY is not set");
-}
-const liveblocks = new Liveblocks({
-  secret: key,
-});
+// Created on first request, not at import: `next build` loads route modules
+// while collecting page data, and the secret only needs to exist at runtime.
+let client: Liveblocks | undefined;
 
-export default liveblocks;
+export const getLiveblocks = () => {
+  const secret = process.env.LIVEBLOCKS_PRIVATE_KEY;
+  if (!secret) throw new Error("LIVEBLOCKS_PRIVATE_KEY is not set");
+  return (client ??= new Liveblocks({ secret }));
+};
