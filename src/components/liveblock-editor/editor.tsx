@@ -39,12 +39,27 @@ import "@blocknote/xl-ai/style.css";
 import { addRelatedTopics, makeInformal } from "./custom-ai-menu-item";
 
 const client = createBlockNoteAIClient({
-  baseURL: `${process.env.NEXT_PUBLIC_EDITOR_GPT_URL}/cynote-editor-ai`,
+  baseURL: `${process.env.NEXT_PUBLIC_EDITOR_GPT_URL}/editor-ai`,
   apiKey: "placeholder-api-key",
 });
 
+const { fetch: proxyFetch, ...providerSettings } =
+  client.getProviderSettings("openai");
+
+// gpt-4o is only a label: the worker always uses its own Azure deployment
 const model = createOpenAI({
-  ...client.getProviderSettings("openai"),
+  ...providerSettings,
+  // BlockNote's AI menu only says "Something went wrong"; surface the worker's daily-limit message
+  fetch: async (input, init) => {
+    const res = await proxyFetch(input, init);
+    if (res.status === 429) {
+      const body = await res.clone().json().catch(() => null);
+      toast.error(body?.error?.message ?? "Daily AI limit reached.", {
+        id: "ai-daily-limit", // AI SDK retries 3x; show one toast
+      });
+    }
+    return res;
+  },
 })("gpt-4o");
 
 function BlockNote({
@@ -77,7 +92,7 @@ function BlockNote({
     },
   });
   return (
-    <div className="relative w-full mx-auto max-w-6xl h-full">
+    <div className="relative w-full mx-auto max-w-5xl h-full">
       <BlockNoteView editor={editor} theme={"dark"} className="h-full">
         {/* Creates a new AIMenu with the default items, 
         as well as our custom ones. */}
@@ -139,7 +154,7 @@ const Editor = () => {
     return null;
   }
   return (
-    <div className="max-w-6xl w-full h-full mx-auto flex flex-col flex-grow scrollbar-none">
+    <div className="max-w-4xl my-2 w-full h-full mx-auto flex flex-col flex-grow scrollbar-none">
       {/* <div className="flex items-center gap-2 justify-end mb-10"> */}
       {/*wip translate document AI */}
       {/* <div className="mx-auto w-full px-[12vw] mt-2">

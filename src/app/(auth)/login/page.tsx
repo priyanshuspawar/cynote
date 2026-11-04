@@ -7,7 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import Link from "next/link";
 import Image from "next/image";
-import Logo from "../../../../public/cypresslogo.svg";
+import Logo from "../../../../public/saino-logo.svg";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/global/Loader";
@@ -30,7 +30,6 @@ const LoginPage = () => {
   });
 
   const onSubmit: SubmitHandler<LoginFormData> = async (formData) => {
-    console.log("Login form data:", formData); // This should now work
 
     try {
       const { error } = await actionLoginUser(formData);
@@ -49,9 +48,9 @@ const LoginPage = () => {
   return (
     <div className="w-full sm:justify-center sm:w-[400px] space-y-6 flex flex-col">
       <Link href="/" className="w-full flex justify-left items-center">
-        <Image src={Logo} alt="cypress Logo" width={50} height={50} />
+        <Image src={Logo} alt="Saino logo" width={50} height={50} />
         <span className="font-semibold dark:text-white text-4xl first-letter:ml-2">
-          cypress.
+          Saino.
         </span>
       </Link>
 

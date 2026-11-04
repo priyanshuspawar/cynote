@@ -57,6 +57,7 @@ const WorkspacePage = () => {
       if (filecreate?.error) {
         throw new Error("failed to create new folder");
       }
+      setShowCreateDialog(false);
       toast("Successfully created the folder");
     } catch (error) {
       toast("Failed to create new folder");

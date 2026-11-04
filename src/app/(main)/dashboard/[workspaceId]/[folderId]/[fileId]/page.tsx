@@ -149,7 +149,7 @@ const FilePage = () => {
         <Breadcrumb className="my-2">
           <BreadcrumbList>
             <BreadcrumbItem>
-              <BreadcrumbLink href={`/dashbaord/${state.workspaceId}`}>
+              <BreadcrumbLink href={`/dashboard/${state.workspaceId}`}>
                 {state.selectedWorkspace?.title ?? "Workspace"}
               </BreadcrumbLink>
             </BreadcrumbItem>
@@ -157,7 +157,7 @@ const FilePage = () => {
             {/* folder */}
             <BreadcrumbItem>
               <BreadcrumbLink
-                href={`/dashbaord/${state.workspaceId}/${path[0]}`}
+                href={`/dashboard/${state.workspaceId}/${path[0]}`}
               >
                 {folder?.iconId && folder.iconId}{" "}
                 {folder?.title ? folder.title : "folder"}
@@ -179,7 +179,7 @@ const FilePage = () => {
                 <Avatar className="w-7 h-7 cursor-pointer">
                   <AvatarImage
                     src={
-                      item.info.avatar === "null" ? item.info.avatar : undefined
+                      item.info.avatar !== "null" ? item.info.avatar : undefined
                     }
                     alt={item.info.email}
                   />

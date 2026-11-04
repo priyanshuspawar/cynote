@@ -1,3 +1,4 @@
+import type { Subscription } from "./supabase/supabase.types";
 import client1 from "../../public/client1.png";
 import client2 from "../../public/client2.png";
 import client3 from "../../public/client3.png";
@@ -16,97 +17,97 @@ export const USERS = [
   {
     name: "Alice",
     message:
-      "Cynote has been a game-changer for our team. With its reliable end-to-end testing, we catch bugs early, leading to faster development cycles and improved collaboration.",
+      "Saino keeps our team notes in one place. Real-time editing means we never email docs back and forth anymore.",
   },
   {
     name: "Bob",
     message:
-      "I used to spend hours debugging frontend issues, but Cynote simplified everything. Now, I'm more productive, and my colleagues can trust our code thanks to Cynote.",
+      "The AI editor rewrites my rough drafts in seconds. It's the first thing I open every morning.",
   },
   {
     name: "Charlie",
     message:
-      "Cynote has transformed the way we work. Our QA and development teams are on the same page, and our productivity has skyrocketed. It's a must-have tool.",
+      "Shared workspaces made onboarding new teammates painless. Everything they need is already organised.",
   },
   {
     name: "David",
     message:
-      "I was skeptical at first, but Cynote exceeded my expectations. Our project timelines have improved, and collaboration between teams is seamless.",
+      "I was skeptical at first, but Saino's live cursors make remote brainstorming feel like being in the same room.",
   },
   {
     name: "Ella",
     message:
-      "Cynote made writing and running tests a breeze. Our team's productivity has never been higher, and we're delivering more reliable software.",
+      "Folders, tags and covers keep my projects tidy without getting in the way of writing.",
   },
   {
     name: "Frank",
     message:
-      "Thanks to Cynote, we've eliminated testing bottlenecks. Our developers and testers collaborate effortlessly, resulting in quicker releases.",
+      "Fix spelling and simplify are my favourite AI actions. Saino cleans up my notes before I share them.",
   },
   {
     name: "Grace",
     message:
-      "Cynote has improved our development process significantly. We now have more time for innovation, and our products are of higher quality.",
+      "We plan every sprint in Saino now. Comments and edits show up instantly for the whole team.",
   },
   {
     name: "Hank",
     message:
-      "Cynote's user-friendly interface made it easy for our non-technical team members to contribute to testing. Our workflow is much more efficient now.",
+      "Saino's clean interface made it easy for our non-technical teammates to start writing on day one.",
   },
   {
     name: "Ivy",
     message:
-      "Our team's collaboration improved immensely with Cynote. We catch issues early, leading to less friction and quicker feature deployments.",
+      "Collaboration improved the moment we moved our docs to Saino. No more conflicting versions.",
   },
   {
     name: "Jack",
     message:
-      "Cynote's robust testing capabilities have elevated our development standards. We work more harmoniously, and our releases are more reliable.",
+      "Translate and summarise right inside the editor saves me a lot of copy and paste.",
   },
   {
     name: "Katherine",
     message:
-      "Cynote is a lifesaver for our cross-functional teams. We're more productive, and there's a shared sense of responsibility for product quality.",
+      "Saino is a lifesaver for our cross-functional team. Everyone works from the same living document.",
   },
   {
     name: "Liam",
     message:
-      "Cynote has helped us maintain high standards of quality. Our team's collaboration has improved, resulting in faster development cycles.",
+      "Trash and restore have saved me more than once. Nothing is ever really lost.",
   },
   {
     name: "Mia",
     message:
-      "Cynote is a powerful tool that improved our productivity and collaboration. It's now an integral part of our development process.",
+      "A fast, focused writing space with AI built in. Saino is now part of my daily workflow.",
   },
   {
     name: "Nathan",
     message:
-      "Cynote's user-friendly interface and detailed reporting have made testing a breeze. Our team's productivity is at an all-time high.",
+      "The dark theme and distraction-free editor make long writing sessions comfortable.",
   },
   {
     name: "Olivia",
     message:
-      "We saw immediate benefits in terms of productivity and collaboration after adopting Cynote. It's an essential tool for our development workflow.",
+      "Inviting collaborators takes seconds, and they can start editing straight away.",
   },
   {
     name: "Paul",
     message:
-      "Cynote has streamlined our testing process and brought our teams closer. We're more efficient and deliver better results.",
+      "Saino turned our scattered meeting notes into an organised, searchable workspace.",
   },
   {
     name: "Quinn",
     message:
-      "Cynote has been a game-changer for us. Our productivity and collaboration have improved significantly, leading to better software.",
+      "I love how quickly the editor loads. Saino feels lightweight but powerful.",
   },
   {
     name: "Rachel",
     message:
-      "Thanks to Cynote, our testing process is now a seamless part of our development cycle. Our teams collaborate effortlessly.",
+      "Saino brought our writers and engineers onto the same page, literally.",
   },
   {
     name: "Sam",
     message:
-      "Cynote is a fantastic tool that has revolutionized our workflow. Our productivity and collaboration have reached new heights.",
+      "The AI suggestions are genuinely useful, and the accept or revert flow keeps me in control.",
   },
 ];
 
@@ -140,6 +141,16 @@ export const PRICING_CARDS = [
 export const PRICING_PLANS = { proplan: "Pro Plan", freeplan: "Free Plan" };
 
 export const MAX_FOLDERS_FREE_PLAN = 3;
+
+// No payments yet: every account gets Pro features. The 15-day "trial" is only a
+// label; after it ends the app stays free and only the worker's daily AI quota applies.
+export const TRIAL_DAYS = 15;
+export const BETA_PRO_SUBSCRIPTION = { status: "active" } as Subscription;
+export const trialDaysLeft = (createdAt?: string) => {
+  if (!createdAt) return TRIAL_DAYS;
+  const used = Math.floor((Date.now() - new Date(createdAt).getTime()) / 86_400_000);
+  return Math.max(0, TRIAL_DAYS - used);
+};
 export const themeColors = [
   "#fb7185",
   "#fdba74",
@@ -1372,9 +1383,9 @@ export const userColors = [
   "#f0abfc",
 ];
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-
-export const SuggestedImages = Array.from({ length: 9 }, (_, i) => ({
-  id: i,
-  imgUrl: `${SUPABASE_URL}/storage/v1/object/public/banners/banner${i + 1}.png`,
-}));
+// default covers ship with the app (public/banners) so every user gets them;
+// the "banners" bucket only holds each user's custom uploads
+export const SuggestedImages = [
+  ...Array.from({ length: 9 }, (_, i) => `/banners/cover${i + 1}.jpg`),
+  ...Array.from({ length: 9 }, (_, i) => `/banners/banner${i + 1}.png`),
+].map((imgUrl, id) => ({ id, imgUrl }));

@@ -165,7 +165,7 @@ const Header = ({ id }: { id: string }) => {
                 </PopoverTrigger>
                 <PopoverContent className="flex flex-col w-96 px-3 py-2 bg-brand-dark">
                   <span className="text-sm text-neutral-200">Banners</span>
-                  <div className="grid grid-cols-4 gap-2 my-2">
+                  <div className="grid grid-cols-6 gap-2 my-2">
                     {SuggestedImages.map((banner) => (
                       <div
                         key={banner.id}

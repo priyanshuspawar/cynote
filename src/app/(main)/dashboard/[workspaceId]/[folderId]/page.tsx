@@ -15,7 +15,7 @@ import { FilePlus, Plus, Tag as TagIcon } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import FileListHeader from "@/components/folder-page/fileitem-header";
 import { useGetFolderDetailsQuery } from "@/redux/services/folderApi";
@@ -229,9 +229,7 @@ const FolderPage = () => {
         <BreadcrumbList>
           <BreadcrumbItem>
             <BreadcrumbLink
-              href={`/dashbaord/${
-                selectedWorkspace?.title ?? folder.workspaceId
-              }`}
+              href={`/dashboard/${folder.workspaceId}`}
             >
               {selectedWorkspace?.title ?? "Workspace"}
             </BreadcrumbLink>
@@ -287,6 +285,10 @@ const FolderPage = () => {
               viewMode={viewMode}
               selected={selectedFiles.includes(file.id)}
               onSelect={(selected) => handleSelectFile(file.id, selected)}
+              onAddTags={() => {
+                setSelectedFiles([file.id]);
+                setShowTagManagement(true);
+              }}
             />
           ))}
         </div>
@@ -324,9 +326,9 @@ const FolderPage = () => {
               placeholder="Enter File Name"
             />
             <EmojiPicker getValue={setNewFileEmoji}>
-              <Button variant={"outline"} className="w-full">
+              <span className={buttonVariants({ variant: "outline", className: "w-full" })}>
                 {newFileEmoji}
-              </Button>
+              </span>
             </EmojiPicker>
           </div>
           <Button

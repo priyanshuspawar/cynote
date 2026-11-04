@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import {
   DialogContent,
   DialogFooter,
@@ -21,7 +21,7 @@ type Props = {
 };
 const CreateFolderDialog = ({ onOpenChange, open, onCreateFolder }: Props) => {
   const [folderName, setFolderName] = useState("");
-  const [selectedIcon, setSelectedIcon] = useState("");
+  const [selectedIcon, setSelectedIcon] = useState("📁");
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (folderName.trim()) {
@@ -68,7 +68,7 @@ const CreateFolderDialog = ({ onOpenChange, open, onCreateFolder }: Props) => {
               <Label>Folder Icon</Label>
               <div className="grid grid-cols-10 gap-2">
                 <EmojiPicker getValue={setSelectedIcon}>
-                  <Button>{selectedIcon}</Button>
+                  <span className={buttonVariants()}>{selectedIcon}</span>
                 </EmojiPicker>
               </div>
             </div>

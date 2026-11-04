@@ -43,6 +43,7 @@ const FoldersDropdownList = ({ workspaceId }: FoldersDropDownListProps) => {
       workspaceId,
       bannerUrl: "",
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     };
     await createFolder(newFolder);
     if (createFolderError) {

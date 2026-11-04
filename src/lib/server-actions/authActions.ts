@@ -26,7 +26,6 @@ export async function actionSignUpUser({
   password,
 }: z.infer<typeof FormSchema>) {
   const supabase = createClient();
-  console.log(email, password);
   const { error } = await supabase.auth.signUp({
     email,
     password,

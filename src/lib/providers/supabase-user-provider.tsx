@@ -6,6 +6,7 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 import { getUserSubscriptionStatus } from "../supabase/queries";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "../supabase/helpers/client";
+import { BETA_PRO_SUBSCRIPTION } from "../constants";
 
 type SupabaseUserContextType = {
   user: AuthUser | null;
@@ -43,7 +44,7 @@ const SupbaseUserProvider: React.FC<SupabaseUserProviderProps> = ({
       if (user) {
         setUser(user);
         const { data, error } = await getUserSubscriptionStatus(user.id);
-        if (data) setSubscription(data);
+        setSubscription(data ?? BETA_PRO_SUBSCRIPTION);
         if (error) {
           toast({
             title: "Unexpected error",

@@ -1,6 +1,7 @@
 import TitleSection from "@/components/landing-page/title-section";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
+import Link from "next/link";
 import AppBanner from "../../../public/appBanner.png";
 import Cal from "../../../public/cal.png";
 import Diamond from "../../../public/icons/diamond.svg";
@@ -42,17 +43,19 @@ const HomePage = () => {
           sm:w-[300px]
         "
         >
-          <Button
-            variant="btn-secondary"
-            className=" w-full
-            rounded-[10px]
-            p-6
-            text-2xl
-            bg-background
-          "
-          >
-            Get Cypress Free
-          </Button>
+          <Link href="/signup">
+            <Button
+              variant="btn-secondary"
+              className=" w-full
+              rounded-[10px]
+              p-6
+              text-2xl
+              bg-background
+            "
+            >
+              Get Saino Free
+            </Button>
+          </Link>
         </div>
         <div
           className="md:mt-[-90px]
@@ -110,7 +113,7 @@ const HomePage = () => {
           before:absolute
         "
         >
-          {[...Array(2)].map((arr,i) => (
+          {[...Array(2)].map((arr, i) => (
             <div
               key={i}
               className="flex
@@ -142,6 +145,7 @@ const HomePage = () => {
         </div>
       </section>
       <section
+        id="features"
         className="px-4
         sm:px-6
         flex
@@ -184,7 +188,7 @@ const HomePage = () => {
           <Image src={Cal} alt="Banner" className="" />
         </div>
       </section>
-      <section className="relative">
+      <section id="testimonial" className="relative">
         <div
           className="w-full
           blur-[120px]
@@ -235,84 +239,96 @@ const HomePage = () => {
                   dark:bg-gradient-to-t
                   dark:from-border dark:to-background
                 "
-                cardHeader={
-                <div className="flex items-center gap-4">
-                  <Avatar>
-                    <AvatarImage src={`/avatars/${index+1}.png`}/>
-                    <AvatarFallback>
-                      {testimonial.name.substring(0,2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div>
-                    <CardTitle className="text-foreground">{testimonial.name}</CardTitle>
-                    <CardDescription className="dark:text-washed-purple-800 italic">@{testimonial.name.toLowerCase()}</CardDescription>
-                  </div>
-                </div>}
-                cardContent={
-                  <p className="dark:text-washed-purple-800">
-                    {testimonial.message}
-                  </p>
-                }
+                  cardHeader={
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={`/avatars/${index + 1}.png`} />
+                        <AvatarFallback>
+                          {testimonial.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <CardTitle className="text-foreground">
+                          {testimonial.name}
+                        </CardTitle>
+                        <CardDescription className="dark:text-washed-purple-800 italic">
+                          @{testimonial.name.toLowerCase()}
+                        </CardDescription>
+                      </div>
+                    </div>
+                  }
+                  cardContent={
+                    <p className="dark:text-washed-purple-800">
+                      {testimonial.message}
+                    </p>
+                  }
                 ></CustomCard>
               ))}
             </div>
           ))}
         </div>
       </section>
-      <section  className="mt-20 px-4 sm:px-6">
-          <TitleSection title="The Perfect Plan For You"
+      <section id="pricing" className="mt-20 px-4 sm:px-6">
+        <TitleSection
+          title="The Perfect Plan For You"
           subheading="Experience all the benefits of our platform. Select a plan that suits your needs and take your productivity to new heights"
           pill="Pricins"
-          />
-          <div className="flex flex-col-reverse sm:flex-row gap-4 justify-center sm:items-stretch items-center mt-10">
-            {PRICING_CARDS.map((card)=>(
-              <CustomCard key={card.planType} className={clsx("w-[300px] rounded-2xl dark:bg-black/40 backdrop-blur-3xl relative",
+        />
+        <div className="flex flex-col-reverse sm:flex-row gap-4 justify-center sm:items-stretch items-center mt-10">
+          {PRICING_CARDS.map((card) => (
+            <CustomCard
+              key={card.planType}
+              className={clsx(
+                "w-[300px] rounded-2xl dark:bg-black/40 backdrop-blur-3xl relative",
                 {
-                  'border-brand-primaryPurple/70':
+                  "border-brand-primaryPurple/70":
                     card.planType === PRICING_PLANS.proplan,
                 }
               )}
-              cardHeader = {
+              cardHeader={
                 <CardTitle className="text-2xl font-semibold">
                   {card.planType === PRICING_PLANS.proplan && (
                     <>
-                      <div 
-                      className="hidden dark:block w-full blur-[120px] rounded-full h-32 absolute bg-brand-primaryPurple/80 -z-10 top-0"
-                      />
-                        <Image 
+                      <div className="hidden dark:block w-full blur-[120px] rounded-full h-32 absolute bg-brand-primaryPurple/80 -z-10 top-0" />
+                      <Image
                         src={Diamond}
-                        alt="pro plan icon" className="absolute top-6 right-6"/>
-                      
+                        alt="pro plan icon"
+                        className="absolute top-6 right-6"
+                      />
                     </>
                   )}
                   {card.planType}
                 </CardTitle>
               }
-              cardContent = {
+              cardContent={
                 <CardContent className="p-0">
-                  <span className="font-normal text-2xl">
-                    ${card.price}
-                  </span>
-                  {
-                    +card.price>0 ? (
-                      <span className="dark:text-washed-purple-800 ml-1">/mo</span>
-                    ):('')
-                  }
+                  <span className="font-normal text-2xl">${card.price}</span>
+                  {+card.price > 0 ? (
+                    <span className="dark:text-washed-purple-800 ml-1">
+                      /mo
+                    </span>
+                  ) : (
+                    ""
+                  )}
                   <div className="flex flex-col dark:text-washed-purple-800 h-16 pt-4">
                     <span>{card.description}</span>
-                    {card.planType === PRICING_PLANS.proplan &&<span>$17 billed monthly</span>}
+                    {card.planType === PRICING_PLANS.proplan && (
+                      <span>15-day free trial. Payments coming soon.</span>
+                    )}
                   </div>
-                  <Button
-                    variant="btn-primary"
-                    className="whitespace-nowrap w-full mt-4"
-                  >
-                    {card.planType === PRICING_PLANS.proplan
-                      ? 'Go Pro'
-                      : 'Get Started'}
-                  </Button>
+                  <Link href="/signup">
+                    <Button
+                      variant="btn-primary"
+                      className="whitespace-nowrap w-full mt-4"
+                    >
+                      {card.planType === PRICING_PLANS.proplan
+                        ? "Start Free Trial"
+                        : "Get Started"}
+                    </Button>
+                  </Link>
                 </CardContent>
               }
-              cardFooter = {
+              cardFooter={
                 <ul
                   className="font-normal
                   flex
@@ -330,20 +346,15 @@ const HomePage = () => {
                       gap-2
                     "
                     >
-                      <Image
-                        src={CheckIcon}
-                        alt="Check Icon"
-                      />
+                      <Image src={CheckIcon} alt="Check Icon" />
                       {feature}
                     </li>
                   ))}
                 </ul>
               }
-              />
-
-              
-            ))}
-          </div>
+            />
+          ))}
+        </div>
       </section>
     </>
   );

@@ -1,12 +1,8 @@
 import { useState } from "react";
-import {
-  MoreHorizontal,
-  Download,
-  Trash2,
-  Edit,
-  Copy,
-  CirclePlus,
-} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { MoreHorizontal, Trash2, CirclePlus, ExternalLink, RotateCcw } from "lucide-react";
+import { useUpdateFileMutation } from "@/redux/services/fileApi";
+import { useSupabaseUser } from "@/lib/providers/supabase-user-provider";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
@@ -26,6 +22,7 @@ interface FileItemProps {
   viewMode: "list" | "grid";
   selected: boolean;
   onSelect: (selected: boolean) => void;
+  onAddTags: () => void;
 }
 
 export function FileItem({
@@ -33,8 +30,21 @@ export function FileItem({
   viewMode,
   selected,
   onSelect,
+  onAddTags,
 }: FileItemProps) {
   const [isHovered, setIsHovered] = useState(false);
+  const router = useRouter();
+  const { user } = useSupabaseUser();
+  const [updateFile] = useUpdateFileMutation();
+  const href = `/dashboard/${file.workspaceId}/${file.folderId}/${file.folderId}folder${file.id}`;
+  const toggleTrash = () =>
+    updateFile({
+      fileId: file.id,
+      updatedData: {
+        inTrash: file.inTrash ? null : `Deleted by ${user?.email}`,
+        folderId: file.folderId,
+      },
+    });
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString("en-US", {
@@ -50,6 +60,7 @@ export function FileItem({
       className={`group flex items-center w-full p-3 rounded-lg transition-colors cursor-pointer ${
         selected ? "bg-popover" : ""
       }`}
+      onClick={() => router.push(href)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -65,7 +76,14 @@ export function FileItem({
         <div className="flex items-center gap-3 min-w-0 w-4/6">
           <span className="text-xl">{file.iconId}</span>
           <div className="min-w-0">
-            <div className="font-medium truncate">{file.title}</div>
+            <div className="font-medium truncate">
+              {file.title}
+              {file.inTrash && (
+                <Badge variant="outline" className="ml-2 text-red-500 border-red-500">
+                  In trash
+                </Badge>
+              )}
+            </div>
             {file.tags.length > 0 && (
               <div className="flex gap-1 mt-1">
                 {file.tags.slice(0, 3).map((tag) => (
@@ -106,24 +124,32 @@ export function FileItem({
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0 transition-opacity"
+              onClick={(e) => e.stopPropagation()}
             >
               <MoreHorizontal className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => {}}>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={() => router.push(href)}>
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onAddTags}>
               <CirclePlus className="h-4 w-4 mr-2" />
               Add Tags
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Edit className="h-4 w-4 mr-2" />
-              Rename
-            </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-red-600">
-              <Trash2 className="h-4 w-4 mr-2" />
-              Delete
-            </DropdownMenuItem>
+            {file.inTrash ? (
+              <DropdownMenuItem onClick={toggleTrash}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Restore
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem className="text-red-600" onClick={toggleTrash}>
+                <Trash2 className="h-4 w-4 mr-2" />
+                Move to Trash
+              </DropdownMenuItem>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

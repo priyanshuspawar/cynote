@@ -13,8 +13,8 @@ const LogoutButton: React.FC<LogoutButtonProps> = ({ children }) => {
   const supabase = createClientComponentClient();
   const logout = async () => {
     await supabase.auth.signOut();
+    router.replace("/login");
     router.refresh();
-    //wip
   };
   return (
     <Button

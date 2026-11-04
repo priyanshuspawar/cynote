@@ -1,0 +1,11 @@
+# dead Tiptap editor (superseded by BlockNote in liveblock-editor/); delete when cleanup lands
+src/components/editor/components/BlockEditor
+src/components/editor/components/TableOfContents
+src/components/editor/components/menus
+src/components/editor/components/panels
+src/components/editor/extensions
+src/components/editor/ui
+src/components/editor/HeaderOptions.tsx
+src/components/editor/Room.tsx
+src/components/editor/index.tsx
+migrations
