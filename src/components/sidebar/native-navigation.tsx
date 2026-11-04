@@ -1,12 +1,12 @@
 import Link from 'next/link';
 import React from 'react';
 import { twMerge } from 'tailwind-merge';
-import CypressHomeIcon from '../icons/cypressHomeIcon';
-import CypressSettingsIcon from '../icons/cypressSettingsIcon';
-import CypressTrashIcon from '../icons/cypressTrashIcon';
+import SainoHomeIcon from '../icons/sainoHomeIcon';
+import SainoSettingsIcon from '../icons/sainoSettingsIcon';
+import SainoTrashIcon from '../icons/sainoTrashIcon';
 import Settings from '../settings/Settings';
 // import Settings from '../settings/settings';
-// import Trash from '../trash/trash';
+import Trash from '../trash/trash';
 
 interface NativeNavigationProps {
   myWorkspaceId: string;
@@ -30,7 +30,7 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
           "
             href={`/dashboard/${myWorkspaceId}`}
           >
-            <CypressHomeIcon />
+            <SainoHomeIcon />
             <span>My Workspace</span>
           </Link>
         </li>
@@ -45,24 +45,25 @@ const NativeNavigation: React.FC<NativeNavigationProps> = ({
             cursor-pointer
           "
           >
-            <CypressSettingsIcon />
+            <SainoSettingsIcon />
             <span>Settings</span>
           </li>
         </Settings>
 
-        {/* <Trash>
+        <Trash>
           <li
             className="group/native
             flex
             text-Neutrals/neutrals-7
             transition-all
             gap-2
+            cursor-pointer
           "
           >
-            <CypressTrashIcon />
+            <SainoTrashIcon />
             <span>Trash</span>
           </li>
-        </Trash>  */}
+        </Trash>
       </ul>
     </nav>
   );

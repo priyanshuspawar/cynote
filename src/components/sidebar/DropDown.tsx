@@ -83,6 +83,7 @@ const DropDown = ({ id, title, listType, iconId }: Props) => {
       id: v4(),
       workspaceId,
       bannerUrl: "",
+      updatedAt: new Date().toISOString(),
     };
     await createFile(newFile);
     if (createFileError) {

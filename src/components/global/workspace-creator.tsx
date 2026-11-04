@@ -54,6 +54,7 @@ const WorkspaceCreator = () => {
           workspaceOwner: user.id,
           logo: null,
           bannerUrl: "",
+          isShared: permissions === "shared",
         };
         if (permissions === "private") {
           const { error: createWorkspaceError } = await createWorkspace(

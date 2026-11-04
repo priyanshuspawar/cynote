@@ -31,8 +31,52 @@ const getUserServer = async () => {
   return data.user.id;
 };
 
-export const getUserSubscriptionStatus = async (userId: string) => {
+// Every server action is a public POST endpoint, so each one that takes an id
+// checks the caller owns or collaborates on the workspace behind it.
+const workspaceAccess = async (workspaceId: string | undefined) => {
+  const userId = await getUserServer();
+  if (!userId || !workspaceId || !validate(workspaceId)) return null;
+  const ws = await db.query.workspaces.findFirst({
+    where: (t, { eq }) => eq(t.id, workspaceId),
+    columns: { workspaceOwner: true },
+  });
+  if (!ws) return null;
+  if (ws.workspaceOwner === userId) return { userId, isOwner: true };
+  const member = await db.query.collaborators.findFirst({
+    where: (t, { and, eq }) =>
+      and(eq(t.workspaceId, workspaceId), eq(t.userId, userId)),
+  });
+  return member ? { userId, isOwner: false } : null;
+};
+const folderWorkspace = async (folderId: string) =>
+  validate(folderId)
+    ? (
+        await db.query.folders.findFirst({
+          where: (t, { eq }) => eq(t.id, folderId),
+          columns: { workspaceId: true },
+        })
+      )?.workspaceId
+    : undefined;
+const fileWorkspace = async (fileId: string) =>
+  validate(fileId)
+    ? (
+        await db.query.files.findFirst({
+          where: (t, { eq }) => eq(t.id, fileId),
+          columns: { workspaceId: true },
+        })
+      )?.workspaceId
+    : undefined;
+const NOT_ALLOWED = "Not allowed";
+const assertAccess = async (workspaceId: string | undefined, ownerOnly = false) => {
+  const access = await workspaceAccess(workspaceId);
+  if (!access || (ownerOnly && !access.isOwner)) throw new Error(NOT_ALLOWED);
+  return access;
+};
+
+export const getUserSubscriptionStatus = async (_userId?: string) => {
   try {
+    const userId = await getUserServer();
+    if (!userId) return { data: null, error: null };
     const data = await db.query.subscriptions.findFirst({
       where: (table, { eq }) => eq(table.userId, userId),
     });
@@ -46,6 +90,8 @@ export const getUserSubscriptionStatus = async (userId: string) => {
 
 export const createWorkspace = async (workspace: workspace) => {
   try {
+    if (workspace.workspaceOwner !== (await getUserServer()))
+      throw new Error(NOT_ALLOWED);
     const response = await db.insert(workspaces).values(workspace);
     return { data: null, error: null };
   } catch (error) {
@@ -57,6 +103,7 @@ export const createWorkspace = async (workspace: workspace) => {
 export const deleteWorkspace = async (workspaceId: string) => {
   if (!workspaceId) return { error: "Workspace not found" };
   try {
+    await assertAccess(workspaceId, true);
     await db.delete(workspaces).where(eq(workspaces.id, workspaceId));
     return { data: "workspace deleted successfully" };
   } catch (error) {
@@ -72,6 +119,7 @@ export const getFolders = async (workspaceId: string) => {
       error: "Error",
     };
   try {
+    await assertAccess(workspaceId);
     const results: Folder[] | [] = await db.query.folders.findMany({
       where: (fields, { eq }) => eq(fields.workspaceId, workspaceId),
       orderBy: (fields, { desc }) => desc(fields.updatedAt),
@@ -90,6 +138,7 @@ export const getWorkspaceDetails = async (workspaceId: string) => {
       error: "Error",
     };
   try {
+    await assertAccess(workspaceId);
     const response = (await db
       .select()
       .from(workspaces)
@@ -108,6 +157,7 @@ export const getFilesDetails = async (fileId: string) => {
       error: "Error",
     };
   try {
+    await assertAccess(await fileWorkspace(fileId));
     const response = await db.query.files.findFirst({
       where: (table, { eq }) => eq(table.id, fileId),
       with: {
@@ -127,6 +177,7 @@ export const getFilesDetails = async (fileId: string) => {
 export const deletFile = async (fileId: string) => {
   if (!fileId) return { error: "Error" };
   try {
+    await assertAccess(await fileWorkspace(fileId));
     await db.delete(files).where(eq(files.id, fileId));
     return { data: "deleted successfully" };
   } catch (err) {
@@ -137,6 +188,7 @@ export const deletFile = async (fileId: string) => {
 export const deleteFolder = async (folderId: string) => {
   if (!folderId) return { error: "Folder not found" };
   try {
+    await assertAccess(await folderWorkspace(folderId));
     await db.delete(folders).where(eq(folders.id, folderId));
     return { data: "Folder deleted successfully" };
   } catch (error) {
@@ -152,6 +204,7 @@ export const getFolderDetails = async (folderId: string) => {
       error: "Error",
     };
   try {
+    await assertAccess(await folderWorkspace(folderId));
     const response = await db.query.folders.findFirst({
       where: (fields, { eq }) => eq(fields.id, folderId),
     });
@@ -302,26 +355,38 @@ export const getSharedWorkspaces = async () => {
 };
 
 export const addCollaborators = async (users: User[], workspaceId: string) => {
-  const response = users.forEach(async (user: User) => {
+  await assertAccess(workspaceId);
+  for (const user of users) {
     const userExists = await db.query.collaborators.findFirst({
       where: (table, { eq }) =>
         and(eq(table.userId, user.id), eq(table.workspaceId, workspaceId)),
     });
     if (!userExists)
       await db.insert(collaborators).values({ workspaceId, userId: user.id });
-  });
+  }
+  if (users.length)
+    await db
+      .update(workspaces)
+      .set({ isShared: true })
+      .where(eq(workspaces.id, workspaceId));
 };
 
+// Exact (case-insensitive) email match only, and only for signed-in users:
+// a substring search let any visitor list every user's email.
 export const getUsersFromSearch = async (email: string) => {
-  if (!email) return [];
+  const query = email?.trim();
+  if (!query || !query.includes("@")) return [];
+  if (!(await getUserServer())) return [];
   const accounts = await db.query.users.findMany({
-    where: (fields, { ilike }) => ilike(fields.email, `%${email}%`),
+    where: (fields, { ilike }) => ilike(fields.email, query.replace(/[%_\\]/g, "\\$&")),
+    columns: { id: true, email: true, fullName: true, avatarUrl: true },
   });
-  return accounts;
+  return accounts as User[];
 };
 
 export const createFolder = async (folder: Folder) => {
   try {
+    await assertAccess(folder.workspaceId);
     await db.insert(folders).values(folder);
     return { data: null, error: null };
   } catch (error) {
@@ -334,9 +399,11 @@ export const updateFolder = async (
   folderId: string
 ) => {
   try {
+    await assertAccess(await folderWorkspace(folderId));
+    const { id, workspaceId, ...changes } = folder;
     await db
       .update(folders)
-      .set({ ...folder, updatedAt: new Date().toISOString() })
+      .set({ ...changes, updatedAt: new Date().toISOString() })
       .where(eq(folders.id, folderId));
     return { data: null, error: null };
   } catch (error) {
@@ -350,6 +417,7 @@ export const getFiles = async (folderId: string, skip?: number) => {
   if (!isValid) return { data: [], error: "Error" }; // Return empty array on validation failure
   skip = skip || 0; // Default to 0 if skip is not provided
   try {
+    await assertAccess(await folderWorkspace(folderId));
     const results = await db.query.files.findMany({
       where: (table, { eq }) => eq(table.folderId, folderId),
       orderBy: (table, { asc }) => asc(table.createdAt),
@@ -382,6 +450,7 @@ export const getFilesForFolderPage = async (
   if (!isValid) return { data: [], error: "Error" }; // Return empty array on validation failure
   skip = skip || 0; // Default to 0 if skip is not provided
   try {
+    await assertAccess(await folderWorkspace(folderId));
     const results = await db.query.files.findMany({
       where: (table, { eq }) => eq(table.folderId, folderId),
       orderBy: (table, { asc }) => asc(table.createdAt),
@@ -400,6 +469,9 @@ export const getFilesForFolderPage = async (
 
 export const createFile = async (file: File) => {
   try {
+    await assertAccess(file.workspaceId);
+    if ((await folderWorkspace(file.folderId)) !== file.workspaceId)
+      throw new Error(NOT_ALLOWED);
     const results = await db.insert(files).values(file).returning(); // Return the inserted file data
     return { data: results[0], error: null }; // Return the created file's data
   } catch (error) {
@@ -410,10 +482,10 @@ export const createFile = async (file: File) => {
 
 export const updateFile = async (file: Partial<File>, fileId: string) => {
   try {
-    const results = await db
-      .update(files)
-      .set(file)
-      .where(eq(files.id, fileId));
+    await assertAccess(await fileWorkspace(fileId));
+    const { id, workspaceId, folderId, ...changes } = file;
+    if (!Object.keys(changes).length) return { data: null, error: null };
+    await db.update(files).set(changes).where(eq(files.id, fileId));
     return { data: null, error: null };
   } catch (error) {
     console.error(error);
@@ -422,6 +494,7 @@ export const updateFile = async (file: Partial<File>, fileId: string) => {
 };
 
 export const getCollaborators = async (workspaceId: string) => {
+  if (!(await workspaceAccess(workspaceId))) return [];
   const response = await db
     .select()
     .from(collaborators)
@@ -451,9 +524,11 @@ export const updateWorkspace = async (
   workspaceId: string
 ) => {
   try {
-    const response = await db
+    await assertAccess(workspaceId);
+    const { id, workspaceOwner, ...changes } = workspace;
+    await db
       .update(workspaces)
-      .set(workspace)
+      .set(changes)
       .where(eq(workspaces.id, workspaceId));
     return { data: null, error: null };
   } catch (error) {
@@ -466,28 +541,27 @@ export const removeCollaborators = async (
   users: User[],
   workspaceId: string
 ) => {
-  const response = users.forEach(async (user: User) => {
-    const userExists = await db.query.collaborators.findFirst({
-      where: (u, { eq }) =>
-        and(eq(u.userId, user.id), eq(u.workspaceId, workspaceId)),
-    });
-
-    if (userExists) {
-      await db
-        .delete(collaborators)
-        .where(
-          and(
-            eq(collaborators.workspaceId, workspaceId),
-            eq(collaborators.userId, user.id)
-          )
-        );
-    }
-  });
+  const access = await assertAccess(workspaceId);
+  for (const user of users) {
+    if (!access.isOwner && user.id !== access.userId) continue;
+    await db
+      .delete(collaborators)
+      .where(
+        and(
+          eq(collaborators.workspaceId, workspaceId),
+          eq(collaborators.userId, user.id)
+        )
+      );
+  }
 };
 
 export const fetchTags = async () => {
   try {
+    // tags are per user; collaborators still see a file's tags via getTagsByFile
+    const user = await getUserServer();
+    if (!user) return { data: [], error: "User not authenticated" };
     const results = await db.query.tags.findMany({
+      where: (table, { eq }) => eq(table.createdBy, user),
       orderBy: (table, { asc }) => asc(table.createdAt),
     });
     return { data: results, error: null };
@@ -524,9 +598,10 @@ export const updateTag = async (
     if (!user) {
       return { data: null, error: "User not authenticated" };
     }
+    const { id, createdBy, ...changes } = updatedTag;
     await db
       .update(tags)
-      .set(updatedTag)
+      .set(changes)
       .where(and(eq(tags.id, updatedTag.id), eq(tags.createdBy, user)));
     return { data: null, error: null };
   } catch (error) {
@@ -554,6 +629,7 @@ export const deleteTag = async (tagId: string) => {
 export const applyTagsToFile = async (fileId: string, tags: string[]) => {
   if (!fileId || !tags.length) return { error: "File or Tag not found" };
   try {
+    await assertAccess(await fileWorkspace(fileId));
     await db.insert(fileTags).values(tags.map((tagId) => ({ fileId, tagId })));
     return { data: "Tags applied successfully" };
   } catch (error) {
@@ -600,6 +676,7 @@ export const getTagsByFile = async (fileId: string) => {
   const isValid = validate(fileId);
   if (!isValid) return { data: [], error: "Error" };
   try {
+    await assertAccess(await fileWorkspace(fileId));
     const results = await db.query.fileTags.findMany({
       where: (table, { eq }) => eq(table.fileId, fileId),
     });
@@ -612,6 +689,7 @@ export const getTagsByFile = async (fileId: string) => {
 
 export const updateModifiedAtFile = async (fileId: string) => {
   try {
+    await assertAccess(await fileWorkspace(fileId));
     await db
       .update(files)
       .set({
@@ -628,6 +706,7 @@ export const searchFilesInWorkspace = async (
   workspaceId: string
 ) => {
   try {
+    await assertAccess(workspaceId);
     const folders = await db.query.folders.findMany({
       where: (fields, { eq, and, ilike }) =>
         and(
@@ -641,4 +720,25 @@ export const searchFilesInWorkspace = async (
   }
 };
 
-export const getRecentFiles = async () => {};
+
+// Trash = soft-deleted folders and files (inTrash is set) in one workspace
+export const getTrashedItems = async (workspaceId: string) => {
+  try {
+    await assertAccess(workspaceId);
+    const [trashedFolders, trashedFiles] = await Promise.all([
+      db.query.folders.findMany({
+        where: (t, { and, eq, isNotNull }) =>
+          and(eq(t.workspaceId, workspaceId), isNotNull(t.inTrash)),
+        columns: { id: true, title: true, iconId: true, inTrash: true },
+      }),
+      db.query.files.findMany({
+        where: (t, { and, eq, isNotNull }) =>
+          and(eq(t.workspaceId, workspaceId), isNotNull(t.inTrash)),
+        columns: { id: true, title: true, iconId: true, inTrash: true, folderId: true },
+      }),
+    ]);
+    return { data: { folders: trashedFolders, files: trashedFiles }, error: null };
+  } catch (error) {
+    return { data: null, error: "Error loading trash" };
+  }
+};

@@ -1,6 +1,6 @@
 "use client";
 
-import FollowPointer from "@/components/follow-pointer";
+import FollowPointer from "@/components/liveblock-editor/follow-pointer";
 import { useMyPresence, useOthers } from "@liveblocks/react/suspense";
 import { PointerEvent } from "react";
 

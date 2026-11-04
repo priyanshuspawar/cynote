@@ -50,7 +50,7 @@ const TranslateDocument = ({ doc }: { doc: Y.Doc }) => {
     startTransition(async () => {
       const documentData = doc.get("document-store").toJSON();
       const res = await fetch(
-        `https://notion-clone-cloudflare-workers.priyanshusingh306.workers.dev/translateDocument`,
+        `${process.env.NEXT_PUBLIC_EDITOR_GPT_URL}/translateDocument`,
         {
           method: "POST",
           headers: {

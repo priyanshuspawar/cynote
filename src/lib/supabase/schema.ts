@@ -9,6 +9,7 @@ import {
   bigint,
   integer,
   primaryKey,
+  unique,
 } from "drizzle-orm/pg-core";
 
 import { relations, sql } from "drizzle-orm";
@@ -243,15 +244,15 @@ export const collaborators = pgTable("collaborators", {
 
 export const tags = pgTable("tags", {
   id: uuid("id").defaultRandom().primaryKey().notNull(),
-  name: text("name").notNull().unique(),
+  name: text("name").notNull(),
   color: text("color"), // optional: hex code or Tailwind class
   createdAt: timestamp("created_at", { withTimezone: true, mode: "string" })
     .defaultNow()
     .notNull(),
   createdBy: uuid("created_by")
     .notNull()
-    .references(() => users.id),
-});
+    .references(() => users.id, { onDelete: "cascade" }),
+}, (t) => [unique("tags_created_by_name_unique").on(t.createdBy, t.name)]);
 
 export const fileTags = pgTable(
   "file_tags",

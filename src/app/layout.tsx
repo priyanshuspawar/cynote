@@ -15,11 +15,12 @@ import "@fontsource/inter/700.css";
 import { ThemeProvider } from "@/lib/providers/next-theme-provider";
 import { twMerge } from "tailwind-merge";
 import { Toaster } from "@/components/ui/toaster";
+import { Toaster as SonnerToaster } from "@/components/ui/sonner";
 import SupabaseUserProvider from "@/lib/providers/supabase-user-provider";
 const dmSans = DM_Sans({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Cynote",
+  title: "Saino",
   description: "Colaborative realtime workflow management app",
 };
 
@@ -30,7 +31,8 @@ export default function RootLayout({
 }>) {
   // console.log(db);
   return (
-    <html lang="en">
+    // next-themes sets class/style on <html> before hydration
+    <html lang="en" suppressHydrationWarning>
       <body
         className={twMerge(
           dmSans.className,
@@ -42,6 +44,8 @@ export default function RootLayout({
             <SupabaseUserProvider>{children}</SupabaseUserProvider>
           </ReduxProvider>
           <Toaster />
+          {/* most features call toast() from "sonner"; it was never mounted */}
+          <SonnerToaster />
         </ThemeProvider>
       </body>
     </html>

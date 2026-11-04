@@ -88,6 +88,7 @@ const DashboardSetup: React.FC<DashboardSetupProps> = ({
         workspaceOwner: user.id,
         logo: filePath || null,
         bannerUrl: "",
+        isShared: false,
       };
       createWorkspace({ workspace: newWorkspace });
       if (createError) {

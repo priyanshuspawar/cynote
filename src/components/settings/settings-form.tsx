@@ -43,14 +43,14 @@ import {
 } from "@/components/ui/alert-dialog";
 
 import CollaboratorSearch from "../global/CollaboratorSearch";
-import { Button } from "../ui/button";
+import { Button, buttonVariants } from "../ui/button";
 import { ScrollArea } from "../ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Alert, AlertDescription } from "../ui/alert";
-import CypressProfileIcon from "../icons/cypressProfileIcon";
+import SainoProfileIcon from "../icons/sainoProfileIcon";
 import LogoutButton from "../global/logout-button";
 import Link from "next/link";
-import { postData } from "@/lib/utils";
+import { trialDaysLeft } from "@/lib/constants";
 import { useAppSelector } from "@/redux/hooks";
 import {
   useUpdateWorkspaceMutation,
@@ -61,6 +61,7 @@ import {
 const SettingsForm = () => {
   const { toast } = useToast();
   const { user, subscription } = useSupabaseUser();
+  const daysLeft = trialDaysLeft(user?.created_at);
   const [updateWorkspace] = useUpdateWorkspaceMutation();
   const [deleteWorkspace] = useDeleteWorkspaceMutation();
 
@@ -72,30 +73,13 @@ const SettingsForm = () => {
   const [openAlertMessage, setOpenAlertMessage] = useState(false);
   const [workspaceDetails, setWorkspaceDetails] = useState<workspace>();
   const titleTimerRef = useRef<ReturnType<typeof setTimeout>>();
-  const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
-  const [loadingPortal, setLoadingPortal] = useState(false);
   const { selectedEntities, workspaceApi } = useAppSelector((state) => state);
   const [error, setError] = useState<{
     type: "workspace-name";
     error: string;
   } | null>(null);
   const { workspaceId, selectedWorkspace } = selectedEntities;
-  //WIP PAYMENT PORTAL
-
-  const redirectToCustomerPortal = async () => {
-    setLoadingPortal(true);
-    try {
-      const { url, error } = await postData({
-        url: "/api/create-portal-link",
-      });
-      window.location.assign(url);
-    } catch (error) {
-      console.log(error);
-      setLoadingPortal(false);
-    }
-    setLoadingPortal(false);
-  };
   //addcollborators
   const addCollaborator = async (profile: User) => {
     if (!workspaceId) return;
@@ -188,7 +172,6 @@ const SettingsForm = () => {
   };
 
   //CHALLENGE fetching avatar details
-  //WIP Payment Portal redirect
 
   useEffect(() => {
     if (!selectedWorkspace) return;
@@ -201,7 +184,8 @@ const SettingsForm = () => {
       const response = await getCollaborators(workspaceId);
       if (response.length) {
         setPermissions("shared");
-        setCollaborators(response);
+        // ponytail: CollabUser has every User field this form reads (id, email, avatarUrl)
+        setCollaborators(response as unknown as User[]);
       }
     };
     fetchCollaborators();
@@ -299,10 +283,10 @@ const SettingsForm = () => {
                 addCollaborator(user);
               }}
             >
-              <Button type="button" className="text-sm mt-4">
+              <span className={buttonVariants({ className: "text-sm mt-4" })}>
                 <Plus />
                 Add Collaborators
-              </Button>
+              </span>
             </CollaboratorSearch>
             <div className="mt-4">
               <span className="text-sm text-muted-foreground">
@@ -405,7 +389,7 @@ const SettingsForm = () => {
           <Avatar>
             <AvatarImage src={""} />
             <AvatarFallback>
-              <CypressProfileIcon />
+              <SainoProfileIcon />
             </AvatarFallback>
           </Avatar>
           <div className="flex flex-col ml-6">
@@ -423,9 +407,10 @@ const SettingsForm = () => {
               type="file"
               accept="image/*"
               placeholder="Profile Picture"
-              // onChange={onChangeProfilePicture}
-              disabled={uploadingProfilePic}
+              // ponytail: upload handler not built yet; enable with onChangeProfilePicture
+              disabled
             />
+            <small className="text-muted-foreground">Coming soon</small>
           </div>
         </div>
         <LogoutButton>
@@ -438,42 +423,23 @@ const SettingsForm = () => {
         </p>
         <Separator />
         <p className="text-muted-foreground">
-          You are currently on a{" "}
-          {subscription?.status === "active" ? "Pro" : "Free"} Plan
+          {daysLeft > 0
+            ? `Pro trial: ${daysLeft} day${daysLeft === 1 ? "" : "s"} left.`
+            : "Pro features stay free while Saino is in beta."}{" "}
+          AI features have a small daily limit.
         </p>
         <Link
-          href="/"
+          href="/#pricing"
           target="_blank"
           className="text-muted-foreground flex flex-row items-center gap-2"
         >
           View Plans <ExternalLink size={16} />
         </Link>
-        {subscription?.status === "active" ? (
-          <div>
-            <Button
-              type="button"
-              size="sm"
-              variant={"secondary"}
-              disabled={loadingPortal}
-              className="text-sm"
-              onClick={redirectToCustomerPortal}
-            >
-              Manage Subscription
-            </Button>
-          </div>
-        ) : (
-          <div>
-            <Button
-              type="button"
-              size="sm"
-              variant={"secondary"}
-              className="text-sm"
-              // onClick={() => setOpen(true)}
-            >
-              Start Plan
-            </Button>
-          </div>
-        )}
+        <div>
+          <Button type="button" size="sm" variant={"secondary"} disabled>
+            Payments coming soon
+          </Button>
+        </div>
       </>
       <AlertDialog open={openAlertMessage}>
         <AlertDialogContent>
