@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/helpers/server";
 import { NextRequest, NextResponse } from "next/server";
 
+// exchanges a one-time auth code per request; must never be prerendered
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const requestUrl = new URL(req.url);

@@ -1,4 +1,4 @@
-import liveblocks from "@/lib/liveblocks";
+import { getLiveblocks } from "@/lib/liveblocks";
 import db from "@/lib/supabase/db";
 import { createClient } from "@/lib/supabase/helpers/server";
 import { NextRequest } from "next/server";
@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   const { room } = await req.json();
-  const session = liveblocks.prepareSession(user.email!, {
+  const session = getLiveblocks().prepareSession(user.email!, {
     userInfo: {
       email: user.email!,
       avatar: user.user_metadata?.avatar_url || "null",
