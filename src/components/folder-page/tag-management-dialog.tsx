@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Plus, Edit2, Trash2, Check, X, TagIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,6 +45,10 @@ export function TagManagementDialog({
   onDeleteTag,
 }: TagManagementDialogProps) {
   const [activeTab, setActiveTab] = useState("apply");
+  // Always reopen on "Apply Tags" (e.g. from a file row's "Add Tags"), not the last tab used
+  useEffect(() => {
+    if (open) setActiveTab("apply");
+  }, [open]);
   const [newTagName, setNewTagName] = useState("");
   const [newTagColor, setNewTagColor] = useState("#3b82f6");
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
