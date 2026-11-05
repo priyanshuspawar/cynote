@@ -742,3 +742,23 @@ export const getTrashedItems = async (workspaceId: string) => {
     return { data: null, error: "Error loading trash" };
   }
 };
+
+// ⌘K palette: every non-trashed folder and file title in one round trip
+export const getWorkspaceIndex = async (workspaceId: string) => {
+  try {
+    await assertAccess(workspaceId);
+    const [folderRows, fileRows] = await Promise.all([
+      db.query.folders.findMany({
+        where: (t, { and, eq, isNull }) => and(eq(t.workspaceId, workspaceId), isNull(t.inTrash)),
+        columns: { id: true, title: true, iconId: true },
+      }),
+      db.query.files.findMany({
+        where: (t, { and, eq, isNull }) => and(eq(t.workspaceId, workspaceId), isNull(t.inTrash)),
+        columns: { id: true, title: true, iconId: true, folderId: true },
+      }),
+    ]);
+    return { data: { folders: folderRows, files: fileRows }, error: null };
+  } catch (error) {
+    return { data: null, error: "Error loading workspace" };
+  }
+};

@@ -5,6 +5,7 @@ import WorkspaceDropdown from "./workspaceDropdown";
 import { Skeleton } from "@/components/ui/skeleton";
 import PlanUsage from "./plan-usage";
 import NativeNavigation from "./native-navigation";
+import CommandPalette from "../global/command-palette";
 import { ScrollArea } from "../ui/scroll-area";
 import FoldersDropdownList from "./folders-dropdown-list";
 import {
@@ -111,6 +112,9 @@ const SideBar = ({ params, className }: SideBarProps) => {
           colaboratingWorkspaces={sharedWorkspaces || []}
           defaultValue={selectedWorkspace}
         />
+        <div className="mt-3">
+          <CommandPalette workspaceId={params.workspaceId} />
+        </div>
         <NativeNavigation myWorkspaceId={params.workspaceId} />
         <ScrollArea className="overflow-y-hidden relative h-[450px]">
           <div className="pointer-events-none w-full absolute bottom-0 h-20 bg-gradient-to-t from-background to-transparent z-40" />
