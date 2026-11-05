@@ -26,7 +26,7 @@ export async function actionSignUpUser({
   password,
 }: z.infer<typeof FormSchema>) {
   const supabase = createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
@@ -34,8 +34,10 @@ export async function actionSignUpUser({
       emailRedirectTo: new URL("/api/auth/callback", process.env.NEXT_PUBLIC_SITE_URL).toString(),
     },
   });
-  // Return only serializable data
+  // Return only serializable data. With "Confirm email" off, Supabase signs the
+  // user in right away (a session exists); with it on, they must confirm first.
   return {
     error: error ? { message: error.message } : null,
+    signedIn: !!data.session,
   };
 }
