@@ -69,7 +69,7 @@ const Signup = () => {
   const onSubmit = async (data: SignUpFormData) => {
 
     try {
-      const { error } = await actionSignUpUser({
+      const { error, signedIn } = await actionSignUpUser({
         email: data.email,
         password: data.password,
       });
@@ -79,7 +79,11 @@ const Signup = () => {
         return;
       }
 
-      setConfirmation(true);
+      if (signedIn) {
+        router.replace("/dashboard");
+        return;
+      }
+      setConfirmation(true); // only when email confirmation is enabled in Supabase
     } catch (err) {
       console.error("Signup error:", err);
       setSubmitError("An unexpected error occurred");
