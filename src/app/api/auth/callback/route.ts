@@ -4,22 +4,29 @@ import { NextRequest, NextResponse } from "next/server";
 // exchanges a one-time auth code per request; must never be prerendered
 export const dynamic = "force-dynamic";
 
-export async function GET(req: NextRequest) {
-  try {
-    const requestUrl = new URL(req.url);
-    const code = requestUrl.searchParams.get("code");
+const INVALID_LINK =
+  "This confirmation link is invalid or has already been used. Please log in, or sign up again.";
 
-    if (code) {
-      const supabase = createClient();
-      await supabase.auth.exchangeCodeForSession(code);
-    }
-    return NextResponse.redirect(`${requestUrl.origin}/dashboard`);
-  } catch (error) {
-    return NextResponse.redirect(
-      new URL(
-        "/signup?error_description=invalid link",
-        process.env.NEXT_PUBLIC_SITE_URL
-      )
-    );
+export async function GET(req: NextRequest) {
+  const { searchParams, origin } = new URL(req.url);
+  const toLogin = (params: Record<string, string>) =>
+    NextResponse.redirect(`${origin}/login?${new URLSearchParams(params)}`);
+
+  // Supabase reports link errors here; on older flows they arrive only in the
+  // #fragment (invisible to the server), which the login page reads instead.
+  if (searchParams.get("error")) {
+    return toLogin({ error: searchParams.get("error_description") || INVALID_LINK });
   }
+
+  const code = searchParams.get("code");
+  if (!code) return toLogin({ error: INVALID_LINK });
+
+  const { error } = await createClient().auth.exchangeCodeForSession(code);
+  if (error) {
+    // Supabase only issues a code after verifying the email, so the address is
+    // confirmed. This fails when the link is opened in a different browser
+    // (no PKCE verifier cookie): the user just needs to log in.
+    return toLogin({ message: "Your email is confirmed. Please log in to continue." });
+  }
+  return NextResponse.redirect(`${origin}/dashboard`);
 }

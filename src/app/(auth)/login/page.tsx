@@ -1,7 +1,7 @@
 "use client";
 import { LoginFormSchema } from "@/lib/types";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
@@ -18,6 +18,19 @@ type LoginFormData = z.infer<typeof LoginFormSchema>;
 const LoginPage = () => {
   const router = useRouter();
   const [submitError, setSubmitError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  // Messages from the email-confirmation callback: ?error= / ?message=, or the
+  // #error_description fragment Supabase adds when a link is expired or reused.
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const hash = new URLSearchParams(window.location.hash.slice(1));
+    const error = query.get("error") || hash.get("error_description");
+    if (error) setSubmitError(error);
+    else if (query.get("message")) setNotice(query.get("message")!);
+    if (window.location.search || window.location.hash)
+      window.history.replaceState(null, "", window.location.pathname);
+  }, []);
 
   const {
     register,
@@ -62,6 +75,7 @@ const LoginPage = () => {
         onSubmit={handleSubmit(onSubmit)}
         onChange={() => {
           if (submitError) setSubmitError("");
+          if (notice) setNotice("");
         }}
         className="space-y-6"
       >
@@ -89,6 +103,7 @@ const LoginPage = () => {
           )}
         </div>
 
+        {notice && <p className="text-sm text-green-500">{notice}</p>}
         {submitError && <p className="text-sm text-red-500">{submitError}</p>}
 
         <Button
