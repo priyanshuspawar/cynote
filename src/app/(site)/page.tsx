@@ -41,6 +41,8 @@ const HomePage = () => {
           from-primary
           to-brand-primaryBlue
           sm:w-[300px]
+          relative
+          z-10
         "
         >
           <Link href="/signup">

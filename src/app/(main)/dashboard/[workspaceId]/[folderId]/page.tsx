@@ -212,14 +212,6 @@ const FolderPage = () => {
     );
   }
 
-  if (!files || files.length === 0) {
-    return (
-      <div className="h-full w-full flex items-center justify-center overflow-hidden">
-        No files found in this folder.
-      </div>
-    );
-  }
-
   const allSelected =
     selectedFiles.length === sortedFiles.length && sortedFiles.length > 0;
 
@@ -278,6 +270,11 @@ const FolderPage = () => {
             sortColumn={sortColumn}
             sortDirection={sortDirection}
           />
+          {sortedFiles.length === 0 && (
+            <p className="py-10 text-center text-muted-foreground">
+              No files yet. Use <span className="font-medium">Add New File</span> to create one.
+            </p>
+          )}
           {sortedFiles.map((file) => (
             <FileItem
               key={file.id}
@@ -296,7 +293,7 @@ const FolderPage = () => {
       <TagManagementDialog
         open={showTagManagement}
         onOpenChange={setShowTagManagement}
-        files={files}
+        files={files ?? []}
         selectedFiles={selectedFiles}
         onCreateTag={handleCreateTag}
         onUpdateTag={handleUpdateTag}
