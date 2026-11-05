@@ -2,8 +2,8 @@ import TitleSection from "@/components/landing-page/title-section";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
-import AppBanner from "../../../public/appBanner.png";
-import Cal from "../../../public/cal.png";
+import AppBanner from "../../../public/appBanner.webp";
+import Cal from "../../../public/cal.webp";
 import Diamond from "../../../public/icons/diamond.svg";
 import CheckIcon from "../../../public/icons/check.svg";
 import { CLIENTS, PRICING_CARDS, PRICING_PLANS, USERS } from "@/lib/constants";
@@ -70,7 +70,7 @@ const HomePage = () => {
           ml-[-50px]
         "
         >
-          <Image src={AppBanner} alt="Application Banner" />
+          <Image src={AppBanner} alt="Cynote workspace preview" priority unoptimized />
           <div
             className="bottom-0
             top-[50%]
@@ -185,7 +185,7 @@ const HomePage = () => {
           border-opacity-10
         "
         >
-          <Image src={Cal} alt="Banner" className="" />
+          <Image src={Cal} alt="Cynote calendar preview" unoptimized />
         </div>
       </section>
       <section id="testimonial" className="relative">
