@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Loader from "@/components/global/Loader";
 import { actionLoginUser } from "@/lib/server-actions/authActions";
+import DemoButton from "@/components/global/demo-button";
 
 type LoginFormData = z.infer<typeof LoginFormSchema>;
 
@@ -116,6 +117,7 @@ const LoginPage = () => {
         </Button>
       </form>
 
+      <DemoButton className="w-full" />
       <span className="self-container text-center">
         Don&#39;t have an account?{" "}
         <Link href="/signup" className="text-primary">

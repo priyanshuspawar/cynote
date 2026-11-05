@@ -19,9 +19,9 @@ import "@blocknote/core/fonts/inter.css";
 import { stringToColor } from "@/lib/utils";
 import "@blocknote/shadcn/style.css";
 import { debounce } from "lodash";
-import { useUpdateFileMutation } from "@/redux/services/fileApi";
+import { useGetFileDetailsQuery, useUpdateFileMutation } from "@/redux/services/fileApi";
 import { toast } from "sonner";
-import TranslateDocument from "./translate-document";
+import AskDocument from "./ask-document";
 
 // ai imports
 import { en } from "@blocknote/core/locales";
@@ -91,6 +91,36 @@ function BlockNote({
       },
     },
   });
+
+  // Seed content: files created with Markdown in `files.data` (e.g. the demo
+  // workspace) are filled in once, the first time their empty document syncs.
+  const room = useRoom();
+  const { data: file } = useGetFileDetailsQuery(room.id);
+  const [updateFile] = useUpdateFileMutation();
+  const seed = file?.data;
+  useEffect(() => {
+    if (!seed) return;
+    let done = false;
+    const apply = async () => {
+      if (done) return;
+      done = true;
+      const blocks = editor.document;
+      const isEmpty =
+        blocks.length <= 1 && !((blocks[0]?.content as unknown[]) ?? []).length;
+      if (isEmpty) {
+        editor.replaceBlocks(blocks, await editor.tryParseMarkdownToBlocks(seed));
+      }
+      updateFile({ fileId: room.id, updatedData: { data: null } });
+    };
+    if (provider.synced) {
+      apply();
+      return;
+    }
+    const onSync = (synced: boolean) => synced && apply();
+    provider.on("sync", onSync);
+    return () => provider.off("sync", onSync);
+  }, [seed, provider, editor, room.id, updateFile]);
+
   return (
     <div className="relative w-full mx-auto max-w-5xl h-full">
       <BlockNoteView editor={editor} theme={"dark"} className="h-full">
@@ -110,6 +140,7 @@ function BlockNote({
         */}
         <SuggestionMenuWithAI editor={editor} />
       </BlockNoteView>
+      <AskDocument editor={editor} />
     </div>
   );
 }
@@ -155,13 +186,6 @@ const Editor = () => {
   }
   return (
     <div className="max-w-4xl my-2 w-full h-full mx-auto flex flex-col flex-grow scrollbar-none">
-      {/* <div className="flex items-center gap-2 justify-end mb-10"> */}
-      {/*wip translate document AI */}
-      {/* <div className="mx-auto w-full px-[12vw] mt-2">
-        <TranslateDocument doc={doc} />
-      </div> */}
-      {/*wip chat to document AI */}
-      {/* </div> */}
       {/* blocknote notion */}
       <BlockNote doc={doc} provider={provider} darkMode={true} />
     </div>

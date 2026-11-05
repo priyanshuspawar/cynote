@@ -7,6 +7,9 @@ A real-time, collaborative note-taking workspace with a built-in AI writing assi
 - **Workspaces, folders and files**: organise notes the way you think, with emoji icons and cover images.
 - **Real-time collaboration**: invite people to a workspace and edit the same document together, with live cursors and presence avatars.
 - **AI editor**: improve writing, fix spelling, simplify, translate, make text informal, or ask the AI anything, right inside the editor. Every suggestion can be accepted or reverted.
+- **Ask this document**: chat with any document ("What are the action items?"); answers come from that document only, and follow-up questions keep context.
+- **⌘K / Ctrl K search**: jump to any folder or file in the workspace from anywhere.
+- **One-click live demo**: "Try the live demo" creates a private, throwaway account with a sample workspace, no sign-up form.
 - **Tags**: create your own coloured tags and apply them to files.
 - **Trash**: restore trashed folders and files, or delete them forever.
 - **Plans**: Pro features are free during the beta. Every account starts with a 15-day Pro trial label; there are no payments yet.

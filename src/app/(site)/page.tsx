@@ -2,6 +2,7 @@ import TitleSection from "@/components/landing-page/title-section";
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
+import DemoButton from "@/components/global/demo-button";
 import AppBanner from "../../../public/appBanner.webp";
 import Cal from "../../../public/cal.webp";
 import Diamond from "../../../public/icons/diamond.svg";
@@ -58,6 +59,11 @@ const HomePage = () => {
               Get Cynote Free
             </Button>
           </Link>
+        </div>
+        {/* z-10: the hero screenshot below is pulled up over this area */}
+        <div className="relative z-10 mt-3 flex flex-col items-center gap-1">
+          <DemoButton className="rounded-[10px]" />
+          <span className="text-xs text-muted-foreground">No sign-up needed</span>
         </div>
         <div
           className="md:mt-[-90px]

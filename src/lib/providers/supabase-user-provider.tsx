@@ -3,6 +3,7 @@
 import { AuthUser } from "@supabase/supabase-js";
 import { Subscription } from "../supabase/supabase.types";
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { getUserSubscriptionStatus } from "../supabase/queries";
 import { useToast } from "@/components/ui/use-toast";
 import { createClient } from "../supabase/helpers/client";
@@ -33,28 +34,40 @@ const SupbaseUserProvider: React.FC<SupabaseUserProviderProps> = ({
   const { toast } = useToast();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [user, setUser] = useState<AuthUser | null>(null);
-  // fetch the user details
-  // subscription details
+  const pathname = usePathname();
+  // This provider lives in the root layout, so it isn't remounted when login,
+  // sign-up or the demo navigate client-side. Re-read the session (a local cookie
+  // read) on every navigation and reload the details only when the user changes;
+  // otherwise pages saw a stale "no user" until a full refresh.
   useEffect(() => {
-    const getUser = async () => {
+    let cancelled = false;
+    const sync = async () => {
       const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      // console.log(user)
-      if (user) {
-        setUser(user);
-        const { data, error } = await getUserSubscriptionStatus(user.id);
-        setSubscription(data ?? BETA_PRO_SUBSCRIPTION);
-        if (error) {
-          toast({
-            title: "Unexpected error",
-            description: "Oops! An unexpected error occurred, please try again",
-          });
-        }
+        data: { session },
+      } = await supabase.auth.getSession();
+      const next = session?.user ?? null;
+      if (cancelled || next?.id === user?.id) return;
+      setUser(next);
+      if (!next) {
+        setSubscription(null);
+        return;
+      }
+      const { data, error } = await getUserSubscriptionStatus(next.id);
+      if (cancelled) return;
+      setSubscription(data ?? BETA_PRO_SUBSCRIPTION);
+      if (error) {
+        toast({
+          title: "Unexpected error",
+          description: "Oops! An unexpected error occurred, please try again",
+        });
       }
     };
-    getUser();
-  }, [supabase, toast]);
+    sync();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
   return (
     <SupabaseUserContext.Provider value={{ user, subscription }}>
       {children}
